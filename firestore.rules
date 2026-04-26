@@ -36,6 +36,19 @@ service cloud.firestore {
         request.auth.token.email == 'brice.faradji@gmail.com';
     }
 
+    // Bookings : créés/mis à jour par les routes API (sans auth utilisateur)
+    match /bookings/{bookingId} {
+      allow create: if true;
+      allow read: if request.auth != null && (
+        request.auth.token.email == resource.data.proEmail ||
+        request.auth.token.email == resource.data.clientEmail ||
+        request.auth.token.email == 'brice.faradji@gmail.com'
+      );
+      allow update: if true;
+      allow delete: if request.auth != null &&
+        request.auth.token.email == 'brice.faradji@gmail.com';
+    }
+
     // Reviews : création publique, lecture des approuvés, admin gère tout
     match /reviews/{reviewId} {
       allow create: if true;

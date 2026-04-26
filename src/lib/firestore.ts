@@ -12,7 +12,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { ClientRequest, Professional, RequestStatus, ProfessionalStatus } from "./types";
+import { ClientRequest, Professional, RequestStatus, ProfessionalStatus, Booking, BookingStatus, ServiceItem, ScheduleSlot, CancellationPolicy } from "./types";
 
 const requireDb = () => {
   if (!db) throw new Error("Firebase n'est pas configuré. Remplissez les variables d'environnement.");
@@ -98,6 +98,24 @@ export const updateProfessionalStatus = async (id: string, status: ProfessionalS
   updateDoc(doc(requireDb(), "professionals", id), { status });
 
 export type CoverageType = "insurance" | "mutuelle" | "retirement";
+
+export const updateProfessionalServices = async (id: string, services: ServiceItem[]) =>
+  updateDoc(doc(requireDb(), "professionals", id), { services });
+
+export const updateProfessionalSchedule = async (id: string, schedule: ScheduleSlot[]) =>
+  updateDoc(doc(requireDb(), "professionals", id), { schedule });
+
+export const updateProfessionalAvailability = async (id: string, periods: import("@/lib/types").AvailabilityPeriod[]) =>
+  updateDoc(doc(requireDb(), "professionals", id), { availabilityPeriods: periods });
+
+export const updateProfessionalInsurance = async (
+  id: string,
+  hasInsurance: boolean,
+  insuranceCompany?: string,
+) => updateDoc(doc(requireDb(), "professionals", id), { hasInsurance, insuranceCompany: insuranceCompany ?? "" });
+
+export const updateCancellationPolicy = async (id: string, policy: CancellationPolicy) =>
+  updateDoc(doc(requireDb(), "professionals", id), { cancellationPolicy: policy });
 
 export const markOfferSent = async (id: string, type: CoverageType) => {
   const field =
@@ -194,5 +212,88 @@ export async function getPendingReviews(): Promise<Review[]> {
 
 export async function approveReview(reviewId: string): Promise<void> {
   const db = requireDb();
-  await updateDoc(doc(db, "reviews", reviewId), { approved: true });
+  const reviewRef = doc(db, "reviews", reviewId);
+  const reviewSnap = await getDoc(reviewRef);
+  await updateDoc(reviewRef, { approved: true });
+
+  if (reviewSnap.exists()) {
+    const proId = reviewSnap.data().proId as string;
+    const q = query(
+      collection(db, "reviews"),
+      where("proId", "==", proId),
+      where("approved", "==", true)
+    );
+    const snap = await getDocs(q);
+    const ratings = snap.docs.map((d) => (d.data().rating as number));
+    const averageRating =
+      ratings.length > 0
+        ? Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10
+        : 0;
+    await updateDoc(doc(db, "professionals", proId), {
+      averageRating,
+      reviewCount: ratings.length,
+    });
+  }
+}
+
+// ──────────────────────────────────────────────
+// Bookings (Stripe Connect)
+// ──────────────────────────────────────────────
+
+export async function createBooking(
+  data: Omit<Booking, "id" | "createdAt">
+): Promise<string> {
+  const ref = await addDoc(collection(requireDb(), "bookings"), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function getBookingById(id: string): Promise<Booking | null> {
+  const snap = await getDoc(doc(requireDb(), "bookings", id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Booking;
+}
+
+export async function getBookingBySessionId(sessionId: string): Promise<Booking | null> {
+  const snap = await getDocs(
+    query(collection(requireDb(), "bookings"), where("stripeSessionId", "==", sessionId))
+  );
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() } as Booking;
+}
+
+export async function updateBookingStatus(
+  id: string,
+  status: BookingStatus,
+  extraFields?: Partial<Booking>
+): Promise<void> {
+  await updateDoc(doc(requireDb(), "bookings", id), {
+    status,
+    ...extraFields,
+  });
+}
+
+export async function getBookingsByPro(proId: string): Promise<Booking[]> {
+  const snap = await getDocs(
+    query(
+      collection(requireDb(), "bookings"),
+      where("proId", "==", proId),
+      orderBy("createdAt", "desc")
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking));
+}
+
+export async function getBookingsByClient(clientEmail: string): Promise<Booking[]> {
+  const snap = await getDocs(
+    query(
+      collection(requireDb(), "bookings"),
+      where("clientEmail", "==", clientEmail),
+      orderBy("createdAt", "desc")
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking));
 }

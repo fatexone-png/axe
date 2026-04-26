@@ -67,6 +67,55 @@ export interface InterventionLocation {
   // V2: lat?: number; lng?: number;
 }
 
+export interface ServiceItem {
+  name: string;
+  durationMinutes: number;
+  priceEuros: number;
+  description?: string;
+}
+
+export type DayOfWeek =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+export interface TimeRange {
+  start: string; // "09:00"
+  end: string;   // "18:00"
+}
+
+export interface ScheduleSlot {
+  day: DayOfWeek;
+  location: string;  // ex: "Cabinet Paris 10e", "À domicile", "En ligne"
+  timeRanges: TimeRange[]; // plages horaires du jour, ex: [{start:"09:00",end:"12:00"},{start:"14:00",end:"18:00"}]
+}
+
+export interface CancellationRule {
+  hoursBeforeSession: number; // ex: 1, 3, 24
+  refundPercent: number;      // 0 à 100
+}
+
+export interface CancellationPolicy {
+  rules: CancellationRule[];
+  proCanWaiveFees: boolean;
+  proCompensationPercent?: number;
+}
+
+export interface AvailabilityPeriod {
+  id: string;
+  label?: string;      // ex: "Printemps 2026"
+  startDate: string;   // "YYYY-MM-DD"
+  endDate: string;     // "YYYY-MM-DD"
+  days: DayOfWeek[];   // ["monday", "wednesday"]
+  startTime: string;   // "09:00"
+  endTime: string;     // "18:00"
+  location: string;    // "Cabinet Paris 15e"
+}
+
 export interface Professional {
   id?: string;
   firstName: string;
@@ -122,10 +171,21 @@ export interface Professional {
   subscriptionStatus: SubscriptionStatus;
   trustLevel: TrustLevel;
   createdAt: Timestamp | Date;
+  averageRating?: number;
+  reviewCount?: number;
   // V2: lat?: number; lng?: number;
-  // V2: averageRating?: number; reviewCount?: number;
   // V2: calendarUrl?: string;
   // V2: stripeCustomerId?: string; stripePriceId?: string;
+
+  // Stripe Connect
+  stripeAccountId?: string;
+  stripeAccountStatus?: "pending" | "active" | "restricted";
+
+  // Tarifs, planning & annulation
+  services?: ServiceItem[];
+  schedule?: ScheduleSlot[];           // legacy weekly template
+  availabilityPeriods?: AvailabilityPeriod[];
+  cancellationPolicy?: CancellationPolicy;
 }
 
 // ──────────────────────────────────────────────
@@ -156,6 +216,14 @@ export interface Invoice {
   clientLastName: string
   clientEmail: string
   clientCity: string
+
+  // Facturation B2B (optionnel — quand le client veut une facture au nom de son entreprise)
+  invoiceType?: "B2C" | "B2B"
+  clientCompanyName?: string
+  clientSiret?: string
+  clientVatNumber?: string
+  clientAddress?: string
+  // V2: pennylaneInvoiceId pour les factures B2B après 2028
 
   // Prestation
   description: string
@@ -206,4 +274,47 @@ export interface Review {
   comment: string;
   createdAt: Date | import("firebase/firestore").Timestamp;
   approved: boolean;
+}
+
+// ──────────────────────────────────────────────
+// Stripe Connect – Bookings
+// ──────────────────────────────────────────────
+
+export type BookingStatus = "pending_payment" | "paid" | "session_confirmed" | "released" | "cancelled" | "disputed"
+
+export interface Booking {
+  id?: string
+  proId: string
+  proEmail: string
+  proStripeAccountId: string
+  clientName: string
+  clientEmail: string
+  clientPhone: string
+  sessionType: string
+  sessionDate: string
+  slotTime?: string          // heure choisie ex: "10:00"
+  sessionLocation?: string   // lieu de la séance
+  amountEuros: number
+  amountCents: number
+  platformFeeCents: number
+  proPayoutCents: number
+  status: BookingStatus
+  stripeSessionId?: string
+  stripePaymentIntentId?: string
+  createdAt: Date | import("firebase/firestore").Timestamp
+  paidAt?: Date | import("firebase/firestore").Timestamp
+  confirmedAt?: Date | import("firebase/firestore").Timestamp
+  cancelledAt?: Date | import("firebase/firestore").Timestamp
+  cancelledBy?: "client" | "pro"
+  refundPercent?: number
+  refundAmountCents?: number
+  proWaivedFees?: boolean
+  promoCodeForClient?: string
+
+  // Facturation B2B
+  invoiceTo?: "personal" | "company"
+  companyName?: string
+  companySiret?: string
+  companyVatNumber?: string
+  companyAddress?: string
 }

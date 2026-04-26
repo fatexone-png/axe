@@ -18,7 +18,7 @@ export default function CoveragePanel({ pro, onUpdate }: Props) {
     {
       type: "insurance" as CoverageType,
       label: "RC Pro",
-      icon: "🛡",
+      icon: "RC",
       description: "Responsabilité Civile Professionnelle",
       hasIt: pro.hasInsurance,
       offerSent: pro.insuranceOfferSent,
@@ -26,7 +26,7 @@ export default function CoveragePanel({ pro, onUpdate }: Props) {
     {
       type: "mutuelle" as CoverageType,
       label: "Mutuelle santé",
-      icon: "❤️",
+      icon: "MUT",
       description: "Complémentaire santé pour indépendants",
       hasIt: pro.hasMutuelle,
       offerSent: pro.mutuelleOfferSent,
@@ -34,7 +34,7 @@ export default function CoveragePanel({ pro, onUpdate }: Props) {
     {
       type: "retirement" as CoverageType,
       label: "Retraite",
-      icon: "📈",
+      icon: "PER",
       description: "PER individuel ou contrat Madelin",
       hasIt: pro.hasRetirement,
       offerSent: pro.retirementOfferSent,
@@ -72,7 +72,7 @@ export default function CoveragePanel({ pro, onUpdate }: Props) {
           <div key={c.type}>
             {/* Ligne principale */}
             <div className="flex items-center gap-3 px-4 py-3">
-              <span className="text-base">{c.icon}</span>
+              <span className="inline-block text-xs font-bold tracking-widest text-axe-accent bg-axe-accent/10 px-2 py-1 rounded-md w-10 text-center flex-shrink-0">{c.icon}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-axe-white">{c.label}</p>
                 <p className="text-xs text-axe-muted">{c.description}</p>

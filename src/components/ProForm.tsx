@@ -127,13 +127,40 @@ export default function ProForm() {
 
   if (submitted) {
     return (
-      <div className="text-center py-16 space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-axe-accent/10 border border-axe-accent/20 mb-4">
+      <div className="text-center py-12 space-y-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-axe-accent/10 border border-axe-accent/20">
           <span className="text-axe-accent text-2xl">✓</span>
         </div>
-        <h2 className="text-2xl font-bold text-axe-white">Profil soumis</h2>
-        <p className="text-axe-muted max-w-sm mx-auto">
-          Votre profil est en cours de validation par l&apos;équipe AXE. Vous recevrez une réponse par email sous 48h.
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-axe-white">Candidature envoyée !</h2>
+          <p className="text-axe-muted max-w-sm mx-auto text-sm">
+            L&apos;équipe AXE examine votre dossier. Vous recevrez un email de confirmation dans les 48h ouvrées.
+          </p>
+        </div>
+
+        <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 text-left space-y-3 max-w-sm mx-auto">
+          <p className="text-sm font-semibold text-axe-white">La suite du processus :</p>
+          <ul className="space-y-2 text-sm text-axe-muted">
+            <li className="flex gap-2">
+              <span className="text-axe-accent font-bold flex-shrink-0">1.</span>
+              Vérification de votre diplôme et de votre identité
+            </li>
+            <li className="flex gap-2">
+              <span className="text-axe-accent font-bold flex-shrink-0">2.</span>
+              Email de validation avec vos accès (statut <em>En attente</em> → <em>Approuvé</em>)
+            </li>
+            <li className="flex gap-2">
+              <span className="text-axe-accent font-bold flex-shrink-0">3.</span>
+              Vous configurez vos tarifs, disponibilités et paiements dans votre tableau de bord
+            </li>
+          </ul>
+        </div>
+
+        <p className="text-xs text-axe-muted">
+          Déjà validé ?{" "}
+          <a href="/login" className="text-axe-accent underline underline-offset-2">
+            Connectez-vous
+          </a>
         </p>
       </div>
     );

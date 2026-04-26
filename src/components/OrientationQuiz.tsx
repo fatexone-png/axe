@@ -510,8 +510,8 @@ export default function OrientationQuiz() {
 
                   {/* Avertissement CQP */}
                   {diplomaBadge.warning && (
-                    <div className="mb-4 bg-yellow-500/5 border border-yellow-500/20 rounded-lg px-3 py-2.5">
-                      <p className="text-xs text-yellow-400/90 leading-relaxed">{diplomaBadge.warning}</p>
+                    <div className="mb-4 bg-axe-amber/5 border border-axe-amber/20 rounded-lg px-3 py-2.5">
+                      <p className="text-xs text-axe-amber/90 leading-relaxed">{diplomaBadge.warning}</p>
                     </div>
                   )}
 
@@ -563,36 +563,33 @@ export default function OrientationQuiz() {
                         <ul className="space-y-2">
                           {inRegion.map((school) => (
                             <li key={school.name}>
-                              <a
-                                href={school.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 -mx-3 hover:bg-white/4 transition-colors"
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-axe-accent flex-shrink-0" />
-                                  <span className="text-axe-white text-sm font-medium truncate group-hover:text-axe-accent transition-colors">
-                                    {school.name}
-                                  </span>
-                                  <span className="text-axe-muted text-sm flex-shrink-0">
-                                    — {school.city}
-                                  </span>
-                                </div>
-                                <svg
-                                  viewBox="0 0 8 8"
-                                  fill="none"
-                                  className="w-3 h-3 text-axe-muted group-hover:text-axe-accent flex-shrink-0 transition-colors"
-                                  aria-hidden="true"
+                              {school.url ? (
+                                <a
+                                  href={school.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 -mx-3 hover:bg-white/4 transition-colors"
                                 >
-                                  <path
-                                    d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5"
-                                    stroke="currentColor"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </a>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-axe-accent flex-shrink-0" />
+                                    <span className="text-axe-white text-sm font-medium truncate group-hover:text-axe-accent transition-colors">
+                                      {school.name}
+                                    </span>
+                                    <span className="text-axe-muted text-sm flex-shrink-0">
+                                      — {school.city}
+                                    </span>
+                                  </div>
+                                  <svg viewBox="0 0 8 8" fill="none" className="w-3 h-3 text-axe-muted group-hover:text-axe-accent flex-shrink-0 transition-colors" aria-hidden="true">
+                                    <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </a>
+                              ) : (
+                                <div className="flex items-center gap-2 px-3 py-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-axe-accent/40 flex-shrink-0" />
+                                  <span className="text-axe-white text-sm font-medium">{school.name}</span>
+                                  <span className="text-axe-muted text-sm">— {school.city}</span>
+                                </div>
+                              )}
                             </li>
                           ))}
                         </ul>
@@ -608,36 +605,33 @@ export default function OrientationQuiz() {
                         <ul className="space-y-2">
                           {others.slice(0, 4).map((school) => (
                             <li key={school.name}>
-                              <a
-                                href={school.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 -mx-3 hover:bg-white/4 transition-colors"
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-white/20 flex-shrink-0" />
-                                  <span className="text-axe-muted text-sm font-medium truncate group-hover:text-axe-white transition-colors">
-                                    {school.name}
-                                  </span>
-                                  <span className="text-axe-muted/60 text-sm flex-shrink-0">
-                                    — {school.city}
-                                  </span>
-                                </div>
-                                <svg
-                                  viewBox="0 0 8 8"
-                                  fill="none"
-                                  className="w-3 h-3 text-axe-muted/50 group-hover:text-axe-muted flex-shrink-0 transition-colors"
-                                  aria-hidden="true"
+                              {school.url ? (
+                                <a
+                                  href={school.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 -mx-3 hover:bg-white/4 transition-colors"
                                 >
-                                  <path
-                                    d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5"
-                                    stroke="currentColor"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </a>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white/20 flex-shrink-0" />
+                                    <span className="text-axe-muted text-sm font-medium truncate group-hover:text-axe-white transition-colors">
+                                      {school.name}
+                                    </span>
+                                    <span className="text-axe-muted/60 text-sm flex-shrink-0">
+                                      — {school.city}
+                                    </span>
+                                  </div>
+                                  <svg viewBox="0 0 8 8" fill="none" className="w-3 h-3 text-axe-muted/50 group-hover:text-axe-muted flex-shrink-0 transition-colors" aria-hidden="true">
+                                    <path d="M1.5 6.5L6.5 1.5M6.5 1.5H3M6.5 1.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </a>
+                              ) : (
+                                <div className="flex items-center gap-2 px-3 py-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-white/10 flex-shrink-0" />
+                                  <span className="text-axe-muted text-sm font-medium">{school.name}</span>
+                                  <span className="text-axe-muted/60 text-sm">— {school.city}</span>
+                                </div>
+                              )}
                             </li>
                           ))}
                         </ul>

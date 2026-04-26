@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getProfessionalById } from "@/lib/firestore";
-import { Professional, Profession } from "@/lib/types";
+import { Professional, Profession, DayOfWeek } from "@/lib/types";
 import { PROFESSION_LABELS } from "@/lib/constants";
 import ReviewsSection from "@/components/ReviewsSection";
 
@@ -25,6 +25,20 @@ const SERVICE_TYPE_LABELS: Record<string, string> = {
   online: "En ligne",
   studio: "Studio",
 };
+
+const DAY_LABELS: Record<DayOfWeek, string> = {
+  monday: "Lun",
+  tuesday: "Mar",
+  wednesday: "Mer",
+  thursday: "Jeu",
+  friday: "Ven",
+  saturday: "Sam",
+  sunday: "Dim",
+};
+
+const DAY_ORDER: DayOfWeek[] = [
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+];
 
 export default function ProPublicPage({ params }: ProPageProps) {
   const [pro, setPro] = useState<Professional | null>(null);
@@ -162,6 +176,58 @@ export default function ProPublicPage({ params }: ProPageProps) {
           </div>
         )}
 
+        {/* Tarifs */}
+        {pro.services && pro.services.length > 0 && (
+          <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">
+              Tarifs
+            </h2>
+            <div className="space-y-2">
+              {pro.services.map((s, i) => (
+                <div key={i} className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-axe-white text-sm font-semibold">{s.name}</p>
+                    <p className="text-axe-muted text-xs">{s.durationMinutes} min</p>
+                    {s.description && <p className="text-axe-muted text-xs mt-1 leading-relaxed">{s.description}</p>}
+                  </div>
+                  <span className="text-axe-accent font-bold text-sm whitespace-nowrap shrink-0">{s.priceEuros}&nbsp;€<span className="text-axe-muted font-normal text-xs">&nbsp;/ séance</span></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Planning */}
+        {pro.schedule && pro.schedule.length > 0 && (
+          <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">
+              Planning
+            </h2>
+            <div className="space-y-2">
+              {DAY_ORDER.map((day) => {
+                const slot = pro.schedule!.find((s) => s.day === day);
+                if (!slot) return null;
+                const range = slot.timeRanges?.[0];
+                return (
+                  <div key={day} className="flex items-center gap-3">
+                    <span className="w-20 shrink-0 text-axe-accent text-xs font-semibold">
+                      {DAY_LABELS[day]}
+                    </span>
+                    <span className="text-axe-white text-sm flex-1">
+                      {slot.location || "Disponible"}
+                    </span>
+                    {range && (
+                      <span className="text-axe-muted text-xs shrink-0">
+                        {range.start} – {range.end}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Zones d'intervention */}
         <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
           <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">
@@ -203,10 +269,16 @@ export default function ProPublicPage({ params }: ProPageProps) {
         </div>
 
         {/* CTA principal */}
-        <div className="text-center">
+        <div className="flex flex-col gap-3">
+          <Link
+            href={`/booking/${pro.id}`}
+            className="inline-block w-full bg-axe-accent text-axe-black font-bold text-base rounded-2xl px-8 py-4 hover:bg-axe-accentDark transition-colors text-center"
+          >
+            Réserver une séance →
+          </Link>
           <Link
             href="/demande"
-            className="inline-block w-full bg-axe-accent text-axe-black font-bold text-base rounded-2xl px-8 py-4 hover:bg-axe-accentDark transition-colors"
+            className="inline-block w-full bg-axe-charcoal text-axe-white font-semibold text-base rounded-2xl px-8 py-4 hover:bg-axe-grey transition-colors border border-white/10 text-center"
           >
             Faire une demande →
           </Link>

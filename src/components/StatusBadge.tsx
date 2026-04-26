@@ -1,9 +1,9 @@
 const COLORS: Record<string, string> = {
   new: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  contacted: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  contacted: "bg-axe-amber/10 text-axe-amber border-axe-amber/20",
   matched: "bg-axe-accent/10 text-axe-accent border-axe-accent/20",
   closed: "bg-axe-muted/10 text-axe-muted border-white/10",
-  pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  pending: "bg-axe-amber/10 text-axe-amber border-axe-amber/20",
   approved: "bg-green-500/10 text-green-400 border-green-500/20",
   rejected: "bg-red-500/10 text-red-400 border-red-500/20",
   unverified: "bg-axe-muted/10 text-axe-muted border-white/10",

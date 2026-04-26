@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";
 import { isAdmin } from "@/lib/auth";
 import AdminRequests from "@/components/AdminRequests";
 import AdminProfessionals from "@/components/AdminProfessionals";
+import { seedProfessionals } from "@/lib/seedProfessionals";
 
 type Tab = "requests" | "professionals";
 
@@ -15,6 +16,8 @@ export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("requests");
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
@@ -41,14 +44,36 @@ export default function AdminPage() {
     <div className="min-h-screen bg-axe-black pt-24 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-axe-white">Administration AXE</h1>
             <p className="text-axe-muted text-sm mt-1">{user.email}</p>
           </div>
-          <span className="text-xs bg-axe-accent/10 text-axe-accent border border-axe-accent/20 px-3 py-1 rounded-full font-medium">
-            Admin
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              disabled={seeding}
+              onClick={async () => {
+                if (!confirm("Ajouter 10 profils de démo dans Firestore ?")) return;
+                setSeeding(true);
+                setSeedMsg("");
+                try {
+                  const n = await seedProfessionals();
+                  setSeedMsg(`${n} profils ajoutés.`);
+                } catch (e) {
+                  setSeedMsg(`Erreur : ${e instanceof Error ? e.message : String(e)}`);
+                } finally {
+                  setSeeding(false);
+                }
+              }}
+              className="text-xs border border-white/10 text-axe-muted px-3 py-1.5 rounded-lg hover:border-axe-accent/30 hover:text-axe-accent transition-colors disabled:opacity-40"
+            >
+              {seeding ? "Seed en cours…" : "Seeder l'annuaire"}
+            </button>
+            {seedMsg && <span className="text-xs text-axe-accent">{seedMsg}</span>}
+            <span className="text-xs bg-axe-accent/10 text-axe-accent border border-axe-accent/20 px-3 py-1 rounded-full font-medium">
+              Admin
+            </span>
+          </div>
         </div>
 
         {/* Tabs */}

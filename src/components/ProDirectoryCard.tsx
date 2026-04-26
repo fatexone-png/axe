@@ -46,7 +46,7 @@ const TRUST_BADGES: Record<TrustLevel, TrustBadgeConfig> = {
   elite: {
     label: "Elite AXE",
     icon: "👑",
-    className: "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20",
+    className: "bg-axe-amber/15 text-axe-amber border border-axe-amber/20",
   },
 };
 
@@ -114,6 +114,24 @@ export default function ProDirectoryCard({ pro }: ProDirectoryCardProps) {
           )}
         </div>
       )}
+
+      {/* Note + prix de départ */}
+      <div className="flex items-center justify-between text-xs">
+        {pro.averageRating && pro.reviewCount ? (
+          <span className="flex items-center gap-1 text-axe-muted">
+            <span className="text-axe-amber font-bold">★</span>
+            <span className="text-axe-white font-semibold">{pro.averageRating.toFixed(1)}</span>
+            <span className="text-axe-muted">({pro.reviewCount})</span>
+          </span>
+        ) : (
+          <span className="text-axe-muted italic">Aucun avis</span>
+        )}
+        {pro.services && pro.services.length > 0 && (
+          <span className="text-axe-accent font-semibold">
+            À partir de {Math.min(...pro.services.map((s) => s.priceEuros))} €
+          </span>
+        )}
+      </div>
 
       {/* Infos RC Pro + Expérience */}
       <div className="flex items-center justify-between text-xs text-axe-muted">
