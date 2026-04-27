@@ -6,7 +6,7 @@ import { Timestamp } from "firebase/firestore";
 
 export type RequestStatus = "new" | "contacted" | "matched" | "closed";
 
-export type ProfessionalStatus = "pending" | "approved" | "rejected";
+export type ProfessionalStatus = "pending" | "approved" | "rejected" | "suspended";
 
 export type SubscriptionStatus = "free" | "premium" | "inactive";
 
@@ -169,6 +169,7 @@ export interface Professional {
   // V2: billingProvider?: "pennylane" | "sellsy" | "indy" | "other"
 
   status: ProfessionalStatus;
+  adminNote?: string;
   subscriptionStatus: SubscriptionStatus;
   trustLevel: TrustLevel;
   createdAt: Timestamp | Date;

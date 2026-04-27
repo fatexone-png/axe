@@ -42,6 +42,7 @@ export const PRO_STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
   approved: "Approuvé",
   rejected: "Refusé",
+  suspended: "Suspendu",
 };
 
 export const TRUST_LEVEL_LABELS: Record<string, string> = {

@@ -97,8 +97,15 @@ export const getProfessionalById = async (id: string): Promise<Professional | nu
   return { id: snap.id, ...snap.data() } as Professional;
 };
 
-export const updateProfessionalStatus = async (id: string, status: ProfessionalStatus) =>
-  updateDoc(doc(requireDb(), "professionals", id), { status });
+export const updateProfessionalStatus = async (
+  id: string,
+  status: ProfessionalStatus,
+  adminNote?: string,
+) => {
+  const data: Record<string, unknown> = { status };
+  if (adminNote !== undefined) data.adminNote = adminNote;
+  return updateDoc(doc(requireDb(), "professionals", id), data);
+};
 
 export type CoverageType = "insurance" | "mutuelle" | "retirement";
 

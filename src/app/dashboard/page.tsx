@@ -134,6 +134,9 @@ export default function DashboardPage() {
   const [savingPolicy, setSavingPolicy] = useState(false);
   const [policySaved, setPolicySaved] = useState(false);
 
+  // Accordéons tarifs
+  const [tarifOpen, setTarifOpen] = useState<"prestations" | "dispos" | "annulation" | null>("prestations");
+
   // Annulation réservations
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelResults, setCancelResults] = useState<Record<string, { promoCode?: string; refundEuros: number }>>({});
@@ -330,6 +333,35 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-axe-black flex items-center justify-center">
         <p className="text-axe-muted">Chargement…</p>
+      </div>
+    );
+  }
+
+  if (pro?.status === "suspended") {
+    return (
+      <div className="min-h-screen bg-axe-black flex items-center justify-center px-4">
+        <div className="max-w-md text-center space-y-5">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 border border-orange-500/20">
+            <span className="text-2xl">🚫</span>
+          </div>
+          <h1 className="text-xl font-bold text-axe-white">Compte suspendu</h1>
+          <p className="text-axe-muted text-sm leading-relaxed">
+            Votre accès à GetAxe a été suspendu par l&apos;équipe d&apos;administration.
+            Votre profil n&apos;est plus visible dans l&apos;annuaire.
+          </p>
+          {pro.adminNote && (
+            <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4 text-left">
+              <p className="text-xs text-orange-400 font-semibold mb-1">Motif communiqué</p>
+              <p className="text-sm text-axe-muted">{pro.adminNote}</p>
+            </div>
+          )}
+          <p className="text-xs text-axe-muted">
+            Pour contester cette décision, contactez-nous à{" "}
+            <a href="mailto:contact@getaxe.fr" className="text-axe-accent underline underline-offset-2">
+              contact@getaxe.fr
+            </a>
+          </p>
+        </div>
       </div>
     );
   }
@@ -599,207 +631,237 @@ export default function DashboardPage() {
 
         {/* ══ TARIFS & DISPO ══ */}
         {activeTab === "tarifs" && (
-          <div className="space-y-8">
+          <div className="space-y-3">
 
-            {/* Tarifs */}
-            <div>
-              <h2 className="text-sm font-semibold text-axe-muted uppercase tracking-wider mb-4">Mes prestations</h2>
-              <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-5">
-                {services.length > 0 && (
-                  <div className="space-y-2">
-                    {services.map((s, i) => (
-                      <div key={i} className="bg-axe-black/40 rounded-xl px-4 py-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-axe-white text-sm font-semibold">{s.name}</p>
-                            <p className="text-axe-muted text-xs">{s.durationMinutes} min</p>
-                            {s.description && <p className="text-axe-muted text-xs mt-1 leading-relaxed">{s.description}</p>}
-                          </div>
-                          <div className="flex items-center gap-4 shrink-0">
-                            <span className="text-axe-accent font-bold text-sm whitespace-nowrap">{s.priceEuros} €</span>
-                            <button onClick={() => removeService(i)} className="text-axe-muted hover:text-red-400 text-xs transition-colors">Supprimer</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="space-y-3 border-t border-white/5 pt-4">
-                  <p className="text-xs font-semibold text-axe-muted uppercase tracking-wider">Ajouter une prestation</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input type="text" className="input sm:col-span-1" placeholder="Nom (ex : Bilan initial)" value={newName} onChange={(e) => setNewName(e.target.value)} />
-                    <select className="input" value={newDuration} onChange={(e) => setNewDuration(Number(e.target.value))}>
-                      {DURATIONS.map((d) => <option key={d} value={d}>{d} min</option>)}
-                    </select>
-                    <input type="number" className="input" placeholder="Prix (€)" min={10} max={1000} value={newPrice} onChange={(e) => setNewPrice(Number(e.target.value))} />
-                  </div>
-                  <textarea rows={2} className="input w-full text-sm resize-none" placeholder="Description (optionnelle)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
-                  <div className="flex gap-3">
-                    <button onClick={addService} disabled={!newName.trim() || newPrice <= 0} className="btn-primary text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-                      Ajouter
-                    </button>
-                    <button onClick={saveServices} disabled={savingServices || services.length === 0} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
-                      {savingServices ? "Sauvegarde…" : "Sauvegarder"}
-                    </button>
-                    {servicesSaved && <span className="text-green-400 text-xs self-center">Sauvegardé ✓</span>}
+            {/* ── Accordéon 1 : Prestations ── */}
+            <div className="bg-axe-charcoal border border-white/5 rounded-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setTarifOpen(tarifOpen === "prestations" ? null : "prestations")}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-base">💼</span>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-axe-white">Mes prestations</p>
+                    <p className="text-xs text-axe-muted">{services.length} prestation{services.length !== 1 ? "s" : ""} configurée{services.length !== 1 ? "s" : ""}</p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Disponibilités */}
-            <div>
-              <h2 className="text-sm font-semibold text-axe-muted uppercase tracking-wider mb-4">Mes disponibilités</h2>
-              <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-4">
-                <p className="text-axe-muted text-sm">Définissez vos périodes avec les mois, semaines et jours concernés.</p>
-
-                {availPeriods.length > 0 && (
-                  <div className="space-y-3">
-                    {availPeriods.map((p) => (
-                      <div key={p.id} className="bg-axe-black/40 border border-white/5 rounded-xl px-4 py-3 space-y-2">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
-                            {p.label && <p className="text-axe-white text-sm font-semibold">{p.label}</p>}
-                            <p className="text-axe-accent text-xs font-medium">
-                              {p.startDate.split("-").reverse().join("/")} → {p.endDate.split("-").reverse().join("/")}
-                            </p>
-                            <p className="text-axe-muted text-xs">{p.startTime} – {p.endTime} · {p.location}</p>
-                          </div>
-                          <button type="button" onClick={() => removePeriod(p.id)} className="shrink-0 text-axe-muted hover:text-red-400 text-xs transition-colors">
-                            Supprimer
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {DAYS.map(({ key }) => (
-                            <span key={key} className={`text-xs px-2 py-0.5 rounded-full ${p.days.includes(key) ? "bg-axe-accent/15 text-axe-accent" : "bg-white/5 text-axe-muted/40"}`}>
-                              {DAY_SHORT[key]}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {showAddPeriod ? (
-                  <div className="border border-axe-accent/20 rounded-xl p-4 space-y-4 bg-axe-accent/5">
-                    <p className="text-axe-white text-sm font-semibold">Nouvelle période</p>
-                    <input type="text" placeholder="Étiquette (optionnel) — ex : Printemps 2026" value={newPLabel} onChange={(e) => setNewPLabel(e.target.value)} className="input w-full text-sm" />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-axe-muted">Début</label>
-                        <input type="date" value={newPStart} onChange={(e) => setNewPStart(e.target.value)} className="input w-full text-sm" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-axe-muted">Fin</label>
-                        <input type="date" value={newPEnd} onChange={(e) => setNewPEnd(e.target.value)} className="input w-full text-sm" />
-                      </div>
-                    </div>
+                <span className={`text-axe-muted transition-transform duration-200 ${tarifOpen === "prestations" ? "-rotate-90" : "rotate-90"}`}>›</span>
+              </button>
+              {tarifOpen === "prestations" && (
+                <div className="border-t border-white/5 p-5 space-y-5">
+                  {services.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-xs text-axe-muted">Jours</p>
-                      <div className="flex flex-wrap gap-2">
-                        {DAYS.map(({ key }) => {
-                          const selected = newPDays.includes(key);
-                          return (
-                            <button key={key} type="button"
-                              onClick={() => setNewPDays((prev) => selected ? prev.filter((d) => d !== key) : [...prev, key])}
-                              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${selected ? "bg-axe-accent text-axe-black border-axe-accent font-semibold" : "bg-transparent text-axe-muted border-white/10 hover:border-axe-accent/40"}`}
-                            >
-                              {DAY_SHORT[key]}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {services.map((s, i) => (
+                        <div key={i} className="bg-axe-black/40 rounded-xl px-4 py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-axe-white text-sm font-semibold">{s.name}</p>
+                              <p className="text-axe-muted text-xs">{s.durationMinutes} min</p>
+                              {s.description && <p className="text-axe-muted text-xs mt-1 leading-relaxed">{s.description}</p>}
+                            </div>
+                            <div className="flex items-center gap-4 shrink-0">
+                              <span className="text-axe-accent font-bold text-sm whitespace-nowrap">{s.priceEuros} €</span>
+                              <button onClick={() => removeService(i)} className="text-axe-muted hover:text-red-400 text-xs transition-colors">Supprimer</button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs text-axe-muted">Heure de début</label>
-                        <input type="time" value={newPStartTime} onChange={(e) => setNewPStartTime(e.target.value)} className="input w-full text-sm" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs text-axe-muted">Heure de fin</label>
-                        <input type="time" value={newPEndTime} onChange={(e) => setNewPEndTime(e.target.value)} className="input w-full text-sm" />
-                      </div>
+                  )}
+                  <div className="space-y-3 border-t border-white/5 pt-4">
+                    <p className="text-xs font-semibold text-axe-muted uppercase tracking-wider">Ajouter une prestation</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <input type="text" className="input sm:col-span-1" placeholder="Nom (ex : Bilan initial)" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                      <select className="input" value={newDuration} onChange={(e) => setNewDuration(Number(e.target.value))}>
+                        {DURATIONS.map((d) => <option key={d} value={d}>{d} min</option>)}
+                      </select>
+                      <input type="number" className="input" placeholder="Prix (€)" min={10} max={1000} value={newPrice} onChange={(e) => setNewPrice(Number(e.target.value))} />
                     </div>
-                    <input type="text" placeholder="Lieu — Cabinet Paris 11e, À domicile, En ligne…" value={newPLocation} onChange={(e) => setNewPLocation(e.target.value)} className="input w-full text-sm" />
-                    <div className="flex gap-3 pt-1">
-                      <button type="button" onClick={addPeriod} disabled={!newPStart || !newPEnd || newPDays.length === 0 || !newPLocation.trim()} className="btn-primary text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-                        Ajouter
+                    <textarea rows={2} className="input w-full text-sm resize-none" placeholder="Description (optionnelle)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+                    <div className="flex gap-3">
+                      <button onClick={addService} disabled={!newName.trim() || newPrice <= 0} className="btn-primary text-sm disabled:opacity-40 disabled:cursor-not-allowed">Ajouter</button>
+                      <button onClick={saveServices} disabled={savingServices || services.length === 0} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+                        {savingServices ? "Sauvegarde…" : "Sauvegarder"}
                       </button>
-                      <button type="button" onClick={() => setShowAddPeriod(false)} className="text-xs text-axe-muted hover:text-axe-white px-3 py-2">
-                        Annuler
-                      </button>
+                      {servicesSaved && <span className="text-green-400 text-xs self-center">Sauvegardé ✓</span>}
                     </div>
                   </div>
-                ) : (
-                  <button type="button" onClick={() => setShowAddPeriod(true)} className="w-full border border-dashed border-white/10 rounded-xl py-3 text-axe-muted text-sm hover:border-axe-accent/30 hover:text-axe-accent transition-colors">
-                    + Ajouter une période
-                  </button>
-                )}
-
-                <div className="flex items-center gap-3 pt-1">
-                  <button onClick={saveAvailability} disabled={savingAvail} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
-                    {savingAvail ? "Sauvegarde…" : "Sauvegarder les disponibilités"}
-                  </button>
-                  {availSaved && <span className="text-green-400 text-xs">Sauvegardé ✓</span>}
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Politique d'annulation */}
-            <div>
-              <h2 className="text-sm font-semibold text-axe-muted uppercase tracking-wider mb-4">Politique d&apos;annulation</h2>
-              <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-5">
-                <p className="text-axe-muted text-sm">Pourcentage remboursé au client selon le délai avant la séance.</p>
+            {/* ── Accordéon 2 : Disponibilités ── */}
+            <div className="bg-axe-charcoal border border-white/5 rounded-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setTarifOpen(tarifOpen === "dispos" ? null : "dispos")}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-base">📅</span>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-axe-white">Mes disponibilités</p>
+                    <p className="text-xs text-axe-muted">{availPeriods.length} période{availPeriods.length !== 1 ? "s" : ""} · lieux &amp; horaires</p>
+                  </div>
+                </div>
+                <span className={`text-axe-muted transition-transform duration-200 ${tarifOpen === "dispos" ? "-rotate-90" : "rotate-90"}`}>›</span>
+              </button>
+              {tarifOpen === "dispos" && (
+                <div className="border-t border-white/5 p-5 space-y-4">
+                  <p className="text-axe-muted text-sm">Définissez vos périodes avec les mois, semaines, jours et lieu d&apos;exercice.</p>
+                  {availPeriods.length > 0 && (
+                    <div className="space-y-3">
+                      {availPeriods.map((p) => (
+                        <div key={p.id} className="bg-axe-black/40 border border-white/5 rounded-xl px-4 py-3 space-y-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              {p.label && <p className="text-axe-white text-sm font-semibold">{p.label}</p>}
+                              <p className="text-axe-accent text-xs font-medium">
+                                {p.startDate.split("-").reverse().join("/")} → {p.endDate.split("-").reverse().join("/")}
+                              </p>
+                              <p className="text-axe-muted text-xs">{p.startTime} – {p.endTime} · {p.location}</p>
+                            </div>
+                            <button type="button" onClick={() => removePeriod(p.id)} className="shrink-0 text-axe-muted hover:text-red-400 text-xs transition-colors">Supprimer</button>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {DAYS.map(({ key }) => (
+                              <span key={key} className={`text-xs px-2 py-0.5 rounded-full ${p.days.includes(key) ? "bg-axe-accent/15 text-axe-accent" : "bg-white/5 text-axe-muted/40"}`}>
+                                {DAY_SHORT[key]}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showAddPeriod ? (
+                    <div className="border border-axe-accent/20 rounded-xl p-4 space-y-4 bg-axe-accent/5">
+                      <p className="text-axe-white text-sm font-semibold">Nouvelle période</p>
+                      <input type="text" placeholder="Étiquette (optionnel) — ex : Printemps 2026" value={newPLabel} onChange={(e) => setNewPLabel(e.target.value)} className="input w-full text-sm" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-axe-muted">Début</label>
+                          <input type="date" value={newPStart} onChange={(e) => setNewPStart(e.target.value)} className="input w-full text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-axe-muted">Fin</label>
+                          <input type="date" value={newPEnd} onChange={(e) => setNewPEnd(e.target.value)} className="input w-full text-sm" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs text-axe-muted">Jours</p>
+                        <div className="flex flex-wrap gap-2">
+                          {DAYS.map(({ key }) => {
+                            const selected = newPDays.includes(key);
+                            return (
+                              <button key={key} type="button"
+                                onClick={() => setNewPDays((prev) => selected ? prev.filter((d) => d !== key) : [...prev, key])}
+                                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${selected ? "bg-axe-accent text-axe-black border-axe-accent font-semibold" : "bg-transparent text-axe-muted border-white/10 hover:border-axe-accent/40"}`}
+                              >
+                                {DAY_SHORT[key]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs text-axe-muted">Heure de début</label>
+                          <input type="time" value={newPStartTime} onChange={(e) => setNewPStartTime(e.target.value)} className="input w-full text-sm" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs text-axe-muted">Heure de fin</label>
+                          <input type="time" value={newPEndTime} onChange={(e) => setNewPEndTime(e.target.value)} className="input w-full text-sm" />
+                        </div>
+                      </div>
+                      <input type="text" placeholder="Lieu — Cabinet Paris 11e, À domicile, En ligne…" value={newPLocation} onChange={(e) => setNewPLocation(e.target.value)} className="input w-full text-sm" />
+                      <div className="flex gap-3 pt-1">
+                        <button type="button" onClick={addPeriod} disabled={!newPStart || !newPEnd || newPDays.length === 0 || !newPLocation.trim()} className="btn-primary text-sm disabled:opacity-40 disabled:cursor-not-allowed">Ajouter</button>
+                        <button type="button" onClick={() => setShowAddPeriod(false)} className="text-xs text-axe-muted hover:text-axe-white px-3 py-2">Annuler</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => setShowAddPeriod(true)} className="w-full border border-dashed border-white/10 rounded-xl py-3 text-axe-muted text-sm hover:border-axe-accent/30 hover:text-axe-accent transition-colors">
+                      + Ajouter une période
+                    </button>
+                  )}
+                  <div className="flex items-center gap-3 pt-1">
+                    <button onClick={saveAvailability} disabled={savingAvail} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+                      {savingAvail ? "Sauvegarde…" : "Sauvegarder les disponibilités"}
+                    </button>
+                    {availSaved && <span className="text-green-400 text-xs">Sauvegardé ✓</span>}
+                  </div>
+                </div>
+              )}
+            </div>
 
-                <div className="space-y-3">
-                  {CANCEL_TIERS.map(({ hours, label }) => (
-                    <div key={hours} className="flex items-center gap-4 bg-axe-black/40 rounded-xl px-4 py-3">
-                      <span className="flex-1 text-axe-white text-sm">{label}</span>
+            {/* ── Accordéon 3 : Politique d'annulation ── */}
+            <div className="bg-axe-charcoal border border-white/5 rounded-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setTarifOpen(tarifOpen === "annulation" ? null : "annulation")}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-base">🔄</span>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-axe-white">Politique d&apos;annulation</p>
+                    <p className="text-xs text-axe-muted">Remboursements selon le délai</p>
+                  </div>
+                </div>
+                <span className={`text-axe-muted transition-transform duration-200 ${tarifOpen === "annulation" ? "-rotate-90" : "rotate-90"}`}>›</span>
+              </button>
+              {tarifOpen === "annulation" && (
+                <div className="border-t border-white/5 p-5 space-y-5">
+                  <p className="text-axe-muted text-sm">Pourcentage remboursé au client selon le délai avant la séance.</p>
+                  <div className="space-y-3">
+                    {CANCEL_TIERS.map(({ hours, label }) => (
+                      <div key={hours} className="flex items-center gap-4 bg-axe-black/40 rounded-xl px-4 py-3">
+                        <span className="flex-1 text-axe-white text-sm">{label}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <input type="number" min={0} max={100} step={5} value={getRulePercent(hours)} onChange={(e) => updateRulePercent(hours, Math.min(100, Math.max(0, Number(e.target.value))))} className="input w-20 text-center text-sm font-bold" />
+                          <span className="text-axe-muted text-sm">%</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-4 bg-axe-black/20 rounded-xl px-4 py-3 opacity-60">
+                      <span className="flex-1 text-axe-muted text-sm">Moins d&apos;1h avant</span>
                       <div className="flex items-center gap-2 shrink-0">
-                        <input type="number" min={0} max={100} step={5} value={getRulePercent(hours)} onChange={(e) => updateRulePercent(hours, Math.min(100, Math.max(0, Number(e.target.value))))} className="input w-20 text-center text-sm font-bold" />
+                        <span className="w-20 text-center text-sm font-bold text-axe-muted">0</span>
                         <span className="text-axe-muted text-sm">%</span>
                       </div>
                     </div>
-                  ))}
-                  <div className="flex items-center gap-4 bg-axe-black/20 rounded-xl px-4 py-3 opacity-60">
-                    <span className="flex-1 text-axe-muted text-sm">Moins d&apos;1h avant</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="w-20 text-center text-sm font-bold text-axe-muted">0</span>
-                      <span className="text-axe-muted text-sm">%</span>
+                  </div>
+                  <div className="bg-axe-black/40 rounded-xl px-4 py-4 space-y-2 border border-orange-500/20">
+                    <p className="text-axe-white text-sm font-semibold">Si c&apos;est moi qui annule</p>
+                    <p className="text-axe-muted text-xs leading-relaxed">Le client est remboursé à 100%. Vous pouvez lui offrir un code promo.</p>
+                    <div className="flex items-center gap-3 pt-1">
+                      <span className="text-axe-muted text-xs shrink-0">Code promo de</span>
+                      <input type="number" min={0} max={50} step={5} value={policy.proCompensationPercent ?? 0} onChange={(e) => { setPolicy((p) => ({ ...p, proCompensationPercent: Math.min(50, Math.max(0, Number(e.target.value))) })); setPolicySaved(false); }} className="input w-20 text-center text-sm font-bold" />
+                      <span className="text-axe-muted text-xs">% sur la prochaine séance</span>
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-axe-black/40 rounded-xl px-4 py-4 space-y-2 border border-orange-500/20">
-                  <p className="text-axe-white text-sm font-semibold">Si c&apos;est moi qui annule</p>
-                  <p className="text-axe-muted text-xs leading-relaxed">Le client est remboursé à 100%. Vous pouvez lui offrir un code promo.</p>
-                  <div className="flex items-center gap-3 pt-1">
-                    <span className="text-axe-muted text-xs shrink-0">Code promo de</span>
-                    <input type="number" min={0} max={50} step={5} value={policy.proCompensationPercent ?? 0} onChange={(e) => { setPolicy((p) => ({ ...p, proCompensationPercent: Math.min(50, Math.max(0, Number(e.target.value))) })); setPolicySaved(false); }} className="input w-20 text-center text-sm font-bold" />
-                    <span className="text-axe-muted text-xs">% sur la prochaine séance</span>
+                  <div onClick={() => { setPolicy((p) => ({ ...p, proCanWaiveFees: !p.proCanWaiveFees })); setPolicySaved(false); }} className="flex items-start gap-3 bg-axe-black/40 rounded-xl px-4 py-4 cursor-pointer hover:bg-axe-black/60 transition-colors">
+                    <div className={`shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${policy.proCanWaiveFees ? "bg-axe-accent border-axe-accent" : "border-white/20"}`}>
+                      {policy.proCanWaiveFees && <span className="text-axe-black text-xs font-bold">✓</span>}
+                    </div>
+                    <div>
+                      <p className="text-axe-white text-sm font-semibold">Je peux exonérer un client à ma discrétion</p>
+                      <p className="text-axe-muted text-xs mt-0.5">Vous pouvez toujours rembourser intégralement un client depuis le tableau de bord.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={savePolicy} disabled={savingPolicy} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
+                      {savingPolicy ? "Sauvegarde…" : "Sauvegarder"}
+                    </button>
+                    {policySaved && <span className="text-green-400 text-xs">Sauvegardé ✓</span>}
                   </div>
                 </div>
-
-                <div onClick={() => { setPolicy((p) => ({ ...p, proCanWaiveFees: !p.proCanWaiveFees })); setPolicySaved(false); }} className="flex items-start gap-3 bg-axe-black/40 rounded-xl px-4 py-4 cursor-pointer hover:bg-axe-black/60 transition-colors">
-                  <div className={`shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${policy.proCanWaiveFees ? "bg-axe-accent border-axe-accent" : "border-white/20"}`}>
-                    {policy.proCanWaiveFees && <span className="text-axe-black text-xs font-bold">✓</span>}
-                  </div>
-                  <div>
-                    <p className="text-axe-white text-sm font-semibold">Je peux exonérer un client à ma discrétion</p>
-                    <p className="text-axe-muted text-xs mt-0.5">Vous pouvez toujours rembourser intégralement un client depuis le tableau de bord.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button onClick={savePolicy} disabled={savingPolicy} className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed">
-                    {savingPolicy ? "Sauvegarde…" : "Sauvegarder"}
-                  </button>
-                  {policySaved && <span className="text-green-400 text-xs">Sauvegardé ✓</span>}
-                </div>
-              </div>
+              )}
             </div>
+
           </div>
         )}
 

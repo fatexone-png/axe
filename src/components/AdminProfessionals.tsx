@@ -13,6 +13,8 @@ export default function AdminProfessionals() {
   const [filterProfession, setFilterProfession] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const [filterStatus, setFilterStatus] = useState("pending");
+  const [suspendNote, setSuspendNote] = useState<Record<string, string>>({});
+  const [suspendOpen, setSuspendOpen] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     getProfessionals().then((data) => {
@@ -21,9 +23,10 @@ export default function AdminProfessionals() {
     });
   }, []);
 
-  const handleStatus = async (id: string, status: ProfessionalStatus) => {
-    await updateProfessionalStatus(id, status);
-    setPros((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
+  const handleStatus = async (id: string, status: ProfessionalStatus, note?: string) => {
+    await updateProfessionalStatus(id, status, note);
+    setPros((prev) => prev.map((p) => (p.id === id ? { ...p, status, ...(note !== undefined ? { adminNote: note } : {}) } : p)));
+    setSuspendOpen((prev) => ({ ...prev, [id]: false }));
   };
 
   const handleCoverageUpdate = (id: string, fields: Partial<Professional>) => {
@@ -124,36 +127,80 @@ export default function AdminProfessionals() {
             <CoveragePanel pro={p} onUpdate={handleCoverageUpdate} />
 
             {/* Actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleStatus(p.id!, "approved")}
-                disabled={p.status === "approved"}
-                className={`text-xs px-4 py-2 rounded-lg font-semibold transition-colors ${
-                  p.status === "approved"
-                    ? "bg-green-900/20 text-green-600 cursor-default"
-                    : "bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20"
-                }`}
-              >
-                Approuver
-              </button>
-              <button
-                onClick={() => handleStatus(p.id!, "rejected")}
-                disabled={p.status === "rejected"}
-                className={`text-xs px-4 py-2 rounded-lg font-semibold transition-colors ${
-                  p.status === "rejected"
-                    ? "bg-red-900/20 text-red-600 cursor-default"
-                    : "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
-                }`}
-              >
-                Refuser
-              </button>
-              <button
-                onClick={() => handleStatus(p.id!, "pending")}
-                disabled={p.status === "pending"}
-                className="text-xs px-3 py-2 rounded-lg text-axe-muted hover:text-axe-white border border-white/5 hover:border-white/20 transition-colors"
-              >
-                Remettre en attente
-              </button>
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleStatus(p.id!, "approved")}
+                  disabled={p.status === "approved"}
+                  className={`text-xs px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    p.status === "approved"
+                      ? "bg-green-900/20 text-green-600 cursor-default"
+                      : "bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20"
+                  }`}
+                >
+                  Approuver
+                </button>
+                <button
+                  onClick={() => handleStatus(p.id!, "rejected")}
+                  disabled={p.status === "rejected"}
+                  className={`text-xs px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    p.status === "rejected"
+                      ? "bg-red-900/20 text-red-600 cursor-default"
+                      : "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                  }`}
+                >
+                  Refuser
+                </button>
+                <button
+                  onClick={() => setSuspendOpen((prev) => ({ ...prev, [p.id!]: !prev[p.id!] }))}
+                  disabled={p.status === "suspended"}
+                  className={`text-xs px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    p.status === "suspended"
+                      ? "bg-orange-900/20 text-orange-600 cursor-default"
+                      : "bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20"
+                  }`}
+                >
+                  {p.status === "suspended" ? "Suspendu" : "Suspendre"}
+                </button>
+                <button
+                  onClick={() => handleStatus(p.id!, "pending")}
+                  disabled={p.status === "pending"}
+                  className="text-xs px-3 py-2 rounded-lg text-axe-muted hover:text-axe-white border border-white/5 hover:border-white/20 transition-colors"
+                >
+                  Remettre en attente
+                </button>
+              </div>
+
+              {/* Panneau suspension */}
+              {suspendOpen[p.id!] && (
+                <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-3 space-y-2">
+                  <p className="text-xs text-orange-400 font-semibold">Motif de suspension (visible uniquement par l&apos;admin)</p>
+                  <textarea
+                    rows={2}
+                    placeholder="Ex: signalement client, manquement déontologique…"
+                    value={suspendNote[p.id!] ?? ""}
+                    onChange={(e) => setSuspendNote((prev) => ({ ...prev, [p.id!]: e.target.value }))}
+                    className="w-full text-xs bg-axe-dark border border-white/10 rounded-lg px-3 py-2 text-axe-white placeholder:text-axe-muted/50 resize-none focus:outline-none focus:border-orange-500/40"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleStatus(p.id!, "suspended", suspendNote[p.id!] ?? "")}
+                      className="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-4 py-1.5 rounded-lg font-semibold hover:bg-orange-500/30 transition-colors"
+                    >
+                      Confirmer la suspension
+                    </button>
+                    <button
+                      onClick={() => setSuspendOpen((prev) => ({ ...prev, [p.id!]: false }))}
+                      className="text-xs text-axe-muted hover:text-axe-white transition-colors px-2"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                  {p.adminNote && (
+                    <p className="text-xs text-axe-muted italic">Motif actuel : {p.adminNote}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}

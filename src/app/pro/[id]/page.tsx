@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { onAuthStateChanged, User } from "firebase/auth";
@@ -11,7 +11,7 @@ import { PROFESSION_LABELS } from "@/lib/constants";
 import ReviewsSection from "@/components/ReviewsSection";
 
 interface ProPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const PROFESSION_COLORS: Record<Profession, string> = {
@@ -44,7 +44,8 @@ const DAY_ORDER: DayOfWeek[] = [
   "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
 ];
 
-export default function ProPublicPage({ params }: ProPageProps) {
+export default function ProPublicPage({ params: paramsPromise }: ProPageProps) {
+  const params = use(paramsPromise);
   const router = useRouter();
   const [pro, setPro] = useState<Professional | null>(null);
   const [loading, setLoading] = useState(true);
