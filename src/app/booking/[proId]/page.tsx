@@ -32,6 +32,7 @@ export default function BookingPage({ params }: BookingPageProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Facturation entreprise
+  const [cgvAccepted, setCgvAccepted]         = useState(false);
   const [invoiceTo, setInvoiceTo]             = useState<"personal" | "company">("personal");
   const [companyName, setCompanyName]         = useState("");
   const [companySiret, setCompanySiret]       = useState("");
@@ -59,12 +60,16 @@ export default function BookingPage({ params }: BookingPageProps) {
 
   const selected   = services[selectedIndex] ?? services[0];
   const amount     = selected.priceEuros;
-  const proAmount  = Math.round(amount * 0.85);
+  const proAmount  = Math.round(amount * 0.92);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!pro?.id) return;
 
+    if (!cgvAccepted) {
+      setError("Vous devez accepter les conditions générales de vente pour continuer.");
+      return;
+    }
     if (invoiceTo === "company" && !companyName.trim()) {
       setError("Veuillez renseigner le nom de l'entreprise.");
       return;
@@ -303,7 +308,7 @@ export default function BookingPage({ params }: BookingPageProps) {
                   <p className="text-axe-accent font-bold text-lg">{proAmount} €</p>
                 </div>
               </div>
-              <p className="text-axe-muted text-xs text-center">15% de commission AXE inclus dans le montant total.</p>
+              <p className="text-axe-muted text-xs text-center">8% de commission GetAxe inclus dans le montant total.</p>
             </div>
 
             {error && (
@@ -312,10 +317,32 @@ export default function BookingPage({ params }: BookingPageProps) {
               </div>
             )}
 
+            {/* CGV */}
+            <div
+              onClick={() => setCgvAccepted((v) => !v)}
+              className="flex items-start gap-3 bg-axe-charcoal border border-white/5 rounded-xl px-4 py-3 cursor-pointer hover:border-white/10 transition-colors"
+            >
+              <div className={`shrink-0 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${cgvAccepted ? "bg-axe-accent border-axe-accent" : "border-white/20"}`}>
+                {cgvAccepted && <span className="text-axe-black text-xs font-bold">✓</span>}
+              </div>
+              <p className="text-axe-muted text-xs leading-relaxed">
+                J&apos;ai lu et j&apos;accepte les{" "}
+                <a
+                  href="/legal"
+                  target="_blank"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-axe-accent underline underline-offset-2 hover:text-axe-white transition-colors"
+                >
+                  conditions générales de vente
+                </a>{" "}
+                et la politique d&apos;annulation de GetAxe. *
+              </p>
+            </div>
+
             <button
               type="submit"
               className="btn-primary w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={submitting}
+              disabled={submitting || !cgvAccepted}
             >
               {submitting ? "Redirection vers le paiement…" : `Payer ${amount} € →`}
             </button>

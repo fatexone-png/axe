@@ -116,6 +116,16 @@ export default function ProForm() {
       optionals.forEach((key) => { if (!payload[key]) delete payload[key]; });
 
       await createProfessional(payload as never);
+      // Fire-and-forget — don't block submission on email delivery
+      fetch("/api/admin/notify-new-pro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${data.firstName} ${data.lastName}`,
+          email: data.email,
+          profession: data.profession,
+        }),
+      }).catch(() => {});
       setSubmitted(true);
     } catch (err) {
       setUploading(false);
@@ -134,7 +144,7 @@ export default function ProForm() {
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-axe-white">Candidature envoyée !</h2>
           <p className="text-axe-muted max-w-sm mx-auto text-sm">
-            L&apos;équipe AXE examine votre dossier. Vous recevrez un email de confirmation dans les 48h ouvrées.
+            L&apos;équipe GetAxe examine votre dossier. Vous recevrez un email de confirmation dans les 48h ouvrées.
           </p>
         </div>
 
@@ -326,7 +336,7 @@ export default function ProForm() {
             Pas encore assuré en RC Pro ? Pas de problème.
           </p>
           <p className="text-xs text-yellow-400/80 leading-relaxed">
-            AXE vous met en relation avec nos partenaires assureurs spécialisés dans les métiers du sport et de la santé.
+            GetAxe vous met en relation avec nos partenaires assureurs spécialisés dans les métiers du sport et de la santé.
             Votre profil sera validé sous réserve de régularisation — vous avez 30 jours après approbation pour vous couvrir.
           </p>
           <div className="grid grid-cols-1 gap-2 pt-1">

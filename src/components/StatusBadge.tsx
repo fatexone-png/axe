@@ -23,7 +23,7 @@ const LABELS: Record<string, string> = {
   unverified: "Non vérifié",
   verified: "Vérifié",
   certified: "Certifié",
-  elite: "Elite AXE",
+  elite: "Elite GetAxe",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

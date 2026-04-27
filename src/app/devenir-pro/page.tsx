@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Devenir professionnel du sport & de la santé",
   description:
-    "Trouvez la formation diplômante adaptée à votre profil et votre région. BPJEPS, IFMK, ostéopathie, STAPS — AXE vous oriente.",
+    "Trouvez la formation diplômante adaptée à votre profil et votre région. BPJEPS, IFMK, ostéopathie, STAPS — GetAxe vous oriente.",
 };
 
 const INFO_CARDS = [
@@ -18,7 +18,7 @@ const INFO_CARDS = [
   },
   {
     title: "Un partenaire pour la suite",
-    desc: "Une fois diplômé, AXE vous accompagne pour trouver vos clients, gérer votre admin et protéger votre activité.",
+    desc: "Une fois diplômé, GetAxe vous accompagne pour trouver vos clients, gérer votre admin et protéger votre activité.",
   },
 ];
 
@@ -64,7 +64,7 @@ export default function DevenirProPage() {
         <div className="mt-12 bg-axe-charcoal border border-axe-accent/20 rounded-2xl p-6 text-center space-y-3">
           <p className="text-axe-white font-semibold">Déjà diplômé ?</p>
           <p className="text-axe-muted text-sm">
-            Rejoignez le réseau AXE et trouvez vos premiers clients dès aujourd&apos;hui.
+            Rejoignez le réseau GetAxe et trouvez vos premiers clients dès aujourd&apos;hui.
           </p>
           <Link
             href="/pro"

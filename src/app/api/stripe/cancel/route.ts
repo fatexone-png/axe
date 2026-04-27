@@ -13,7 +13,6 @@ function computeClientRefundPercent(
   const sessionAt = new Date(`${sessionDate}T${time}:00`);
   const hoursUntil = (sessionAt.getTime() - Date.now()) / (1000 * 60 * 60);
 
-  // rules triées par hoursBeforeSession décroissant — on prend la première qui matche
   const sorted = [...rules].sort((a, b) => b.hoursBeforeSession - a.hoursBeforeSession);
   for (const rule of sorted) {
     if (hoursUntil >= rule.hoursBeforeSession) return rule.refundPercent;
@@ -25,12 +24,13 @@ export async function POST(req: NextRequest): Promise<Response> {
   const body = (await req.json()) as {
     bookingId: string;
     cancelledBy: "client" | "pro";
-    proWaivedFees?: boolean; // le praticien exonère manuellement les frais côté client
+    callerEmail: string;       // clientEmail si client, proEmail si pro
+    proWaivedFees?: boolean;
   };
 
-  const { bookingId, cancelledBy, proWaivedFees } = body;
+  const { bookingId, cancelledBy, callerEmail, proWaivedFees } = body;
 
-  if (!bookingId || !cancelledBy) {
+  if (!bookingId || !cancelledBy || !callerEmail) {
     return Response.json({ error: "Paramètres manquants." }, { status: 400 });
   }
 
@@ -41,6 +41,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     return Response.json({ error: "Aucun paiement associé à cette réservation." }, { status: 400 });
   }
 
+  // Vérification d'identité
+  const expectedEmail = cancelledBy === "client" ? booking.clientEmail : booking.proEmail;
+  if (expectedEmail.toLowerCase() !== callerEmail.toLowerCase()) {
+    return Response.json({ error: "Non autorisé." }, { status: 403 });
+  }
+
   const pro = await getProfessionalById(booking.proId);
   const policy = pro?.cancellationPolicy;
 
@@ -48,10 +54,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   let promoCode: string | undefined;
 
   if (cancelledBy === "pro") {
-    // Praticien annule → remboursement intégral systématique
     refundPercent = 100;
 
-    // Générer un code promo Stripe si configuré
     const compensationPct = policy?.proCompensationPercent ?? 0;
     if (compensationPct > 0) {
       const coupon = await stripe.coupons.create({
@@ -68,7 +72,6 @@ export async function POST(req: NextRequest): Promise<Response> {
       promoCode = promoObj.code;
     }
   } else {
-    // Client annule → calcul selon la politique du praticien
     if (proWaivedFees) {
       refundPercent = 100;
     } else if (policy) {
@@ -78,13 +81,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         booking.slotTime
       );
     } else {
-      refundPercent = 100; // pas de politique → remboursement intégral par défaut
+      refundPercent = 100;
     }
   }
 
   const refundAmountCents = Math.round(booking.amountCents * (refundPercent / 100));
 
-  // Remboursement Stripe
   if (refundAmountCents > 0) {
     await stripe.refunds.create({
       payment_intent: booking.stripePaymentIntentId,
@@ -94,7 +96,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  // Mise à jour Firestore
   await updateBookingStatus(bookingId, "cancelled", {
     cancelledAt: new Date(),
     cancelledBy,
@@ -127,9 +128,5 @@ export async function POST(req: NextRequest): Promise<Response> {
       : Promise.resolve(),
   ]);
 
-  return Response.json({
-    refundAmountEuros: refundEuros,
-    refundPercent,
-    promoCode,
-  });
+  return Response.json({ refundAmountEuros: refundEuros, refundPercent, promoCode });
 }

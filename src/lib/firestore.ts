@@ -10,6 +10,9 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  runTransaction,
+  onSnapshot,
+  limit as fbLimit,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { ClientRequest, Professional, RequestStatus, ProfessionalStatus, Booking, BookingStatus, ServiceItem, ScheduleSlot, CancellationPolicy } from "./types";
@@ -129,11 +132,14 @@ export const markOfferSent = async (id: string, type: CoverageType) => {
 // Invoices
 // ──────────────────────────────────────────────
 
-import { Invoice, InvoiceStatus, Review } from "./types";
+import { Invoice, InvoiceStatus, Review, AppNotification } from "./types";
 
 export const createInvoice = async (data: Omit<Invoice, "id" | "createdAt">) => {
+  const clean = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  );
   const ref = await addDoc(collection(requireDb(), "invoices"), {
-    ...data,
+    ...clean,
     createdAt: serverTimestamp(),
   });
   return ref.id;
@@ -157,10 +163,18 @@ export const updateInvoiceStatus = async (id: string, status: InvoiceStatus) =>
   updateDoc(doc(requireDb(), "invoices", id), { status });
 
 export const generateInvoiceNumber = async (): Promise<string> => {
-  const snap = await getDocs(collection(requireDb(), "invoices"));
-  const count = snap.size + 1;
+  const db = requireDb();
   const year = new Date().getFullYear();
-  return `AXE-${year}-${String(count).padStart(3, "0")}`;
+  const counterRef = doc(db, "counters", `invoices_${year}`);
+
+  const newCount = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(counterRef);
+    const next = snap.exists() ? (snap.data().count as number) + 1 : 1;
+    tx.set(counterRef, { count: next }, { merge: true });
+    return next;
+  });
+
+  return `GETAXE-${year}-${String(newCount).padStart(3, "0")}`;
 };
 
 export const formatDate = (ts: Timestamp | Date | undefined): string => {
@@ -296,4 +310,112 @@ export async function getBookingsByClient(clientEmail: string): Promise<Booking[
     )
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking));
+}
+
+// ──────────────────────────────────────────────
+// Notifications
+// ──────────────────────────────────────────────
+
+export async function createNotification(data: Omit<AppNotification, "id" | "createdAt">): Promise<void> {
+  await addDoc(collection(requireDb(), "notifications"), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function getNotificationsByUser(userId: string): Promise<AppNotification[]> {
+  const snap = await getDocs(
+    query(
+      collection(requireDb(), "notifications"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc")
+    )
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as AppNotification));
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  await updateDoc(doc(requireDb(), "notifications", id), { read: true });
+}
+
+export async function markAllNotificationsRead(userId: string): Promise<void> {
+  const snap = await getDocs(
+    query(collection(requireDb(), "notifications"), where("userId", "==", userId), where("read", "==", false))
+  );
+  await Promise.all(snap.docs.map((d) => updateDoc(d.ref, { read: true })));
+}
+
+// ──────────────────────────────────────────────
+// Messagerie
+// ──────────────────────────────────────────────
+
+import { Conversation, ChatMessage } from "./types";
+
+export async function getOrCreateConversation(
+  proId: string,
+  proEmail: string,
+  proName: string,
+  clientEmail: string,
+  clientName: string
+): Promise<string> {
+  const db = requireDb();
+  const q = query(
+    collection(db, "conversations"),
+    where("proEmail", "==", proEmail),
+    where("clientEmail", "==", clientEmail)
+  );
+  const snap = await getDocs(q);
+  if (!snap.empty) return snap.docs[0].id;
+  const ref = await addDoc(collection(db, "conversations"), {
+    proId, proEmail, proName, clientEmail, clientName,
+    unreadPro: 0, unreadClient: 0,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function getConversationsByPro(proEmail: string): Promise<Conversation[]> {
+  const snap = await getDocs(
+    query(collection(requireDb(), "conversations"), where("proEmail", "==", proEmail), orderBy("createdAt", "desc"))
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Conversation));
+}
+
+export async function getConversationsByClient(clientEmail: string): Promise<Conversation[]> {
+  const snap = await getDocs(
+    query(collection(requireDb(), "conversations"), where("clientEmail", "==", clientEmail), orderBy("createdAt", "desc"))
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Conversation));
+}
+
+export async function sendMessage(conversationId: string, from: string, content: string, role: "pro" | "client"): Promise<void> {
+  const db = requireDb();
+  await addDoc(collection(db, "conversations", conversationId, "messages"), {
+    conversationId, from, content, read: false,
+    createdAt: serverTimestamp(),
+  });
+  const unreadField = role === "pro" ? "unreadClient" : "unreadPro";
+  await updateDoc(doc(db, "conversations", conversationId), {
+    lastMessage: content.slice(0, 100),
+    lastMessageAt: serverTimestamp(),
+    [unreadField]: (await getDoc(doc(db, "conversations", conversationId))).data()?.[unreadField] + 1 || 1,
+  });
+}
+
+export function subscribeToMessages(
+  conversationId: string,
+  onUpdate: (messages: ChatMessage[]) => void
+): () => void {
+  const db = requireDb();
+  return onSnapshot(
+    query(collection(db, "conversations", conversationId, "messages"), orderBy("createdAt", "asc"), fbLimit(100)),
+    (snap) => {
+      onUpdate(snap.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessage)));
+    }
+  );
+}
+
+export async function markConversationRead(conversationId: string, role: "pro" | "client"): Promise<void> {
+  const field = role === "pro" ? "unreadPro" : "unreadClient";
+  await updateDoc(doc(requireDb(), "conversations", conversationId), { [field]: 0 });
 }

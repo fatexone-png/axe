@@ -149,7 +149,7 @@ export default function MutuelleAdvisor({ pro, compact }: Props) {
       )}
 
       <p className="text-xs text-axe-muted/60 text-center">
-        AXE est partenaire de ces mutuelles. En souscrivant via AXE, vous bénéficiez d&apos;un accompagnement personnalisé.
+        GetAxe est partenaire de ces mutuelles. En souscrivant via GetAxe, vous bénéficiez d&apos;un accompagnement personnalisé.
       </p>
     </div>
   );

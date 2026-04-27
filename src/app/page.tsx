@@ -31,7 +31,7 @@ const FOR_WHO = [
   { abbr: "RS", label: "Reprise sportive", desc: "6 mois sans courir, une épaule qui lâche en pleine saison. Reprendre seul, c'est reprendre trop vite — et se reblesser." },
   { abbr: "PF", label: "Performance", desc: "Plateau depuis 3 mois, mêmes séances, aucun résultat. Nos pros travaillent avec des objectifs chiffrés." },
   { abbr: "DR", label: "Douleur & récupération", desc: "Lombalgie chronique, tendinite persistante, épaule bloquée. Le bon kiné peut changer votre quotidien en quelques séances." },
-  { abbr: "RO", label: "Rééducation post-op", desc: "Ligaments du genou, prothèse de hanche, reconstruction d'épaule. AXE identifie les kinés formés pour votre type d'opération." },
+  { abbr: "RO", label: "Rééducation post-op", desc: "Ligaments du genou, prothèse de hanche, reconstruction d'épaule. GetAxe identifie les kinés formés pour votre type d'opération." },
   { abbr: "PC", label: "Préparation combat", desc: "Boxe, MMA, judo, grappling. Nos préparateurs maîtrisent les cycles charge-récupération propres aux arts martiaux." },
   { abbr: "MB", label: "Mobilité & senior", desc: "Après 60 ans, perdre de la mobilité n'est pas une fatalité. Protocoles validés pour rester autonome et actif." },
 ];
@@ -39,23 +39,23 @@ const FOR_WHO = [
 const PRO_TOOLS = [
   {
     tag: "Clients",
-    title: "Trouvez vos premiers clients",
-    desc: "Votre profil vérifié est visible par des milliers de personnes qui cherchent exactement votre expertise. AXE fait le matching, vous faites le métier.",
+    title: "Trouvez vos premiers clients — gratuit",
+    desc: "Votre profil vérifié est visible par des milliers de personnes qui cherchent exactement votre expertise. Aucun abonnement. 8% de commission uniquement quand vous encaissez.",
   },
   {
     tag: "Protection",
-    title: "RC Pro, mutuelle, retraite",
-    desc: "AXE vous accompagne pour couvrir les angles morts de l'indépendance : assurance RC Pro, complémentaire santé, et simulateur retraite PER.",
+    title: "RC Pro, mutuelle, retraite — gratuit",
+    desc: "GetAxe vous accompagne pour couvrir les angles morts de l'indépendance : assurance RC Pro, complémentaire santé, et simulateur retraite PER. Inclus dans votre profil.",
   },
   {
-    tag: "Admin",
-    title: "Facturation électronique 2026",
-    desc: "Générez des factures conformes à la réforme obligatoire de septembre 2026. Numérotation automatique, mentions légales, TVA — prêt pour Pennylane.",
+    tag: "Facturation",
+    title: "Prêt pour l'obligation 2028 — gratuit",
+    desc: "En 2028, la facturation électronique sera obligatoire pour tous les indépendants. GetAxe vous y prépare dès aujourd'hui : factures conformes, numérotation automatique, TVA. Intégration Pennylane à venir.",
   },
   {
     tag: "Guide IA",
-    title: "Votre conseiller 24h/24",
-    desc: "URSSAF, cotisations SSI, franchise de TVA, arrêt maladie en indépendant — posez vos questions à l'assistant IA AXE, spécialisé pour les pros du sport.",
+    title: "Votre conseiller admin 24h/24 — gratuit",
+    desc: "URSSAF, cotisations SSI, franchise de TVA, arrêt maladie en indépendant — posez vos questions à l'assistant IA GetAxe, spécialisé pour les pros du sport.",
   },
 ];
 
@@ -95,7 +95,7 @@ export default function Home() {
       <Section
         id="pour-qui"
         title="Pour qui ?"
-        subtitle="Chaque situation appelle un professionnel différent. AXE identifie celui dont la spécialité correspond exactement à votre cas."
+        subtitle="Chaque situation appelle un professionnel différent. GetAxe identifie celui dont la spécialité correspond exactement à votre cas."
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FOR_WHO.map((f) => (
@@ -121,7 +121,7 @@ export default function Home() {
       <Section
         id="pour-les-pros"
         title="La plateforme complète pour les indépendants du sport"
-        subtitle="AXE n'est pas un simple annuaire. C'est l'infrastructure dont les professionnels du corps ont besoin pour exercer sereinement."
+        subtitle="Zéro abonnement. Tous les outils inclus gratuitement. 8% de commission uniquement sur les réservations confirmées."
         dark
       >
         <div className="grid sm:grid-cols-2 gap-5">
@@ -137,7 +137,7 @@ export default function Home() {
         </div>
         <div className="text-center mt-8">
           <Link href="/pro" className="btn-primary inline-block">
-            Rejoindre le réseau AXE →
+            Rejoindre le réseau GetAxe →
           </Link>
         </div>
       </Section>
@@ -146,7 +146,7 @@ export default function Home() {
       <Section id="orientation" title="Vous voulez devenir professionnel ?">
         <div className="max-w-2xl mx-auto text-center space-y-6">
           <p className="text-axe-muted text-sm leading-relaxed">
-            AXE accompagne aussi ceux qui veulent <strong className="text-axe-white">démarrer une carrière</strong> dans le sport et la santé.
+            GetAxe accompagne aussi ceux qui veulent <strong className="text-axe-white">démarrer une carrière</strong> dans le sport et la santé.
             Coach sportif, kinésithérapeute, ostéopathe — trouvez la formation diplômante
             adaptée à votre profil et votre région.
           </p>
@@ -181,7 +181,7 @@ export default function Home() {
           <span className="text-axe-accent">Ou vous en êtes un ?</span>
         </h2>
         <p className="text-axe-muted mb-10 max-w-md mx-auto text-sm leading-relaxed">
-          AXE s&apos;adresse aux deux côtés du terrain. Clients, trouvez votre professionnel en 48h.
+          GetAxe s&apos;adresse aux deux côtés du terrain. Clients, trouvez votre professionnel en 48h.
           Pros, rejoignez l&apos;unique plateforme qui vous protège autant qu&apos;elle vous apporte des clients.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -201,7 +201,7 @@ export default function Home() {
       <footer className="border-t border-white/5 py-8 px-4 bg-axe-black">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-axe-muted">
-            © {new Date().getFullYear()} AXE · Plateforme de mise en relation · Tous droits réservés
+            © {new Date().getFullYear()} GetAxe · Plateforme de mise en relation · Tous droits réservés
           </p>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-axe-muted">
             <Link href="/annuaire" className="hover:text-axe-white transition-colors">Annuaire</Link>

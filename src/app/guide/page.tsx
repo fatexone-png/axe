@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Page /guide — AXE Guide IA
+ * Page /guide — GetAxe Guide IA
  *
  * CONFIGURATION REQUISE :
  * Créez un fichier .env.local à la racine du projet et ajoutez :

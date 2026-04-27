@@ -20,11 +20,12 @@ export type TrustLevel = "unverified" | "verified" | "certified" | "elite";
 // unverified : inscrit, non vérifié
 // verified   : diplôme/assurance vérifiés par admin
 // certified  : vérification + expérience + avis clients validés
-// elite      : top réseau AXE
+// elite      : top réseau GetAxe
 
 export type Profession =
   | "coach"
   | "physical_trainer"
+  | "mental_coach"
   | "kine"
   | "osteo"
   | "sports_doctor"
@@ -173,7 +174,8 @@ export interface Professional {
   createdAt: Timestamp | Date;
   averageRating?: number;
   reviewCount?: number;
-  // V2: lat?: number; lng?: number;
+  lat?: number
+  lng?: number
   // V2: calendarUrl?: string;
   // V2: stripeCustomerId?: string; stripePriceId?: string;
 
@@ -194,9 +196,20 @@ export interface Professional {
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "cancelled"
 
+export interface InvoiceLine {
+  id: string
+  type: string          // type de prestation (ex: "Séance individuelle")
+  description: string   // description libre
+  date?: string         // date de la séance ISO (optionnel)
+  participants?: number // cours collectif uniquement
+  quantity: number
+  unitPrice: number
+  totalLine: number     // quantity * unitPrice
+}
+
 export interface Invoice {
   id?: string
-  invoiceNumber: string       // ex: AXE-2026-001
+  invoiceNumber: string       // ex: GETAXE-2026-001
   requestId: string
   professionalId: string
 
@@ -205,6 +218,7 @@ export interface Invoice {
   proLastName: string
   proEmail: string
   proPhone: string
+  proAddress?: string
   proCity: string
   proSiret?: string
   proLegalStatus?: string
@@ -215,6 +229,7 @@ export interface Invoice {
   clientFirstName: string
   clientLastName: string
   clientEmail: string
+  clientAddress?: string
   clientCity: string
 
   // Facturation B2B (optionnel — quand le client veut une facture au nom de son entreprise)
@@ -222,13 +237,13 @@ export interface Invoice {
   clientCompanyName?: string
   clientSiret?: string
   clientVatNumber?: string
-  clientAddress?: string
   // V2: pennylaneInvoiceId pour les factures B2B après 2028
 
   // Prestation
-  description: string
-  quantity: number
-  unitPrice: number           // HT
+  lines: InvoiceLine[]        // lignes de facturation
+  description: string         // résumé (première ligne ou titre)
+  quantity: number            // conservé pour compat
+  unitPrice: number           // conservé pour compat
   vatRate: number             // 0 si franchise TVA
   vatAmount: number
   totalHT: number
@@ -238,6 +253,13 @@ export interface Invoice {
   issuedAt: string            // ISO date
   dueAt: string               // ISO date (30 jours par défaut)
   createdAt: Timestamp | Date
+
+  // Coordonnées bancaires (optionnel — virement)
+  iban?: string
+  bic?: string
+
+  // Mentions légales — obligatoire B2B, optionnel B2C
+  showLatePaymentClause?: boolean
 
   // V2: pennylaneInvoiceId?: string
   // V2: signedDocumentUrl?: string
@@ -317,4 +339,48 @@ export interface Booking {
   companySiret?: string
   companyVatNumber?: string
   companyAddress?: string
+}
+
+// ──────────────────────────────────────────────
+// Notifications in-app
+// ──────────────────────────────────────────────
+
+export type NotificationType = "new_booking" | "payment_released" | "cancellation" | "invoice_sent"
+
+export interface AppNotification {
+  id?: string
+  userId: string
+  type: NotificationType
+  title: string
+  body: string
+  read: boolean
+  link?: string
+  createdAt: Date | Timestamp
+}
+
+// ──────────────────────────────────────────────
+// Messagerie
+// ──────────────────────────────────────────────
+
+export interface Conversation {
+  id?: string
+  proId: string
+  proEmail: string
+  clientEmail: string
+  clientName: string
+  proName: string
+  lastMessage?: string
+  lastMessageAt?: Date | Timestamp
+  unreadPro: number
+  unreadClient: number
+  createdAt: Date | Timestamp
+}
+
+export interface ChatMessage {
+  id?: string
+  conversationId: string
+  from: string        // email of sender
+  content: string
+  createdAt: Date | Timestamp
+  read: boolean
 }

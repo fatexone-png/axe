@@ -49,16 +49,16 @@ export default function Hero() {
             </ul>
             <div className="flex flex-col gap-2 pt-1">
               <Link
-                href="/demande"
+                href="/annuaire"
                 className="block w-full text-center bg-axe-accent text-axe-black font-bold py-3 rounded-xl hover:bg-axe-accentDark transition-colors text-sm shadow-[0_0_20px_rgba(200,255,0,0.2)]"
               >
-                Déposer ma demande →
+                Parcourir l&apos;annuaire →
               </Link>
               <Link
-                href="/annuaire"
-                className="block w-full text-center text-axe-muted border border-white/10 py-2.5 rounded-xl hover:text-axe-white hover:border-white/20 transition-colors text-sm"
+                href="/demande"
+                className="block w-full text-center text-axe-accent/80 border border-axe-accent/30 py-2.5 rounded-xl hover:text-axe-accent hover:border-axe-accent/60 transition-colors text-sm"
               >
-                Parcourir l&apos;annuaire
+                Déposer ma demande
               </Link>
             </div>
           </div>
@@ -80,11 +80,11 @@ export default function Hero() {
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-axe-muted text-xs flex-shrink-0">→</span>
-                RC Pro, mutuelle, retraite — tout en un
+                Facturation, RC Pro, Guide IA — 100% gratuit
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-axe-muted text-xs flex-shrink-0">→</span>
-                Facturation électronique 2026 ready
+                8% uniquement quand vous encaissez
               </li>
             </ul>
             <div className="flex flex-col gap-2 pt-1">
@@ -96,7 +96,7 @@ export default function Hero() {
               </Link>
               <Link
                 href="/login"
-                className="block w-full text-center text-axe-muted text-sm py-2.5 hover:text-axe-white transition-colors"
+                className="block w-full text-center text-axe-white border border-white/20 py-2.5 rounded-xl hover:border-white/40 hover:bg-white/5 transition-colors text-sm font-medium"
               >
                 Déjà inscrit ? Se connecter
               </Link>
@@ -106,7 +106,7 @@ export default function Hero() {
 
         {/* Disclaimer */}
         <p className="mt-8 text-xs text-axe-muted/40 max-w-sm mx-auto leading-relaxed">
-          AXE ne remplace pas une consultation médicale d&apos;urgence.
+          GetAxe ne remplace pas une consultation médicale d&apos;urgence.
           En cas d&apos;urgence, appelez le 15 ou le 112.
         </p>
 

@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = "AXE Platform <noreply@bfzoom.fr>";
+const FROM = "GetAxe <noreply@bfzoom.fr>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://getaxe.fr";
 
 // ─── Template de base ─────────────────────────────────────────────────────────
@@ -15,14 +15,14 @@ function base(content: string): string {
   <tr><td align="center">
     <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
       <tr><td style="padding-bottom:28px;">
-        <span style="font-size:22px;font-weight:900;color:#C8FF00;letter-spacing:-0.5px;">AXE</span>
+        <span style="font-size:22px;font-weight:900;color:#C8FF00;letter-spacing:-0.5px;">GetAxe</span>
       </td></tr>
       <tr><td style="background:#1A1A1A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px 36px;">
         ${content}
       </td></tr>
       <tr><td style="padding-top:24px;text-align:center;">
         <p style="color:#444;font-size:12px;margin:0;">
-          AXE Platform &middot; <a href="${APP_URL}" style="color:#444;text-decoration:none;">getaxe.fr</a>
+          GetAxe Platform &middot; <a href="${APP_URL}" style="color:#444;text-decoration:none;">getaxe.fr</a>
         </p>
       </td></tr>
     </table>
@@ -82,7 +82,7 @@ export async function emailBookingConfirmedClient(d: BookingEmailData) {
   const date = fmtDate(d.sessionDate);
   await send(
     d.clientEmail,
-    "Votre réservation est confirmée — AXE",
+    "Votre réservation est confirmée — GetAxe",
     base(`
       <p style="${H}">Réservation confirmée ✓</p>
       <p style="${P}">Bonjour ${d.clientName}, votre paiement a bien été reçu.</p>
@@ -103,7 +103,7 @@ export async function emailBookingConfirmedPro(d: BookingEmailData) {
   const date = fmtDate(d.sessionDate);
   await send(
     d.proEmail,
-    "Nouvelle réservation — AXE",
+    "Nouvelle réservation — GetAxe",
     base(`
       <p style="${H}">Nouvelle réservation 🎯</p>
       <p style="${P}">Un client vient de réserver une séance avec vous.</p>
@@ -112,7 +112,7 @@ export async function emailBookingConfirmedPro(d: BookingEmailData) {
       <p style="${LBL}">Séance</p><p style="${VAL}">${d.sessionType}</p>
       <p style="${LBL}">Date</p><p style="${VAL}">${date}${d.slotTime ? ` à ${d.slotTime}` : ""}</p>
       ${d.sessionLocation ? `<p style="${LBL}">Lieu</p><p style="${VAL}">${d.sessionLocation}</p>` : ""}
-      <p style="${LBL}">Votre rémunération (85 %)</p><p style="${BIG}">${d.proPayoutEuros} €</p>
+      <p style="${LBL}">Votre rémunération (92 %)</p><p style="${BIG}">${d.proPayoutEuros} €</p>
       ${HR}
       <p style="${P}">Le paiement sera libéré dès que le client confirme la séance.</p>
       ${btn(`${APP_URL}/dashboard`, "Voir mes réservations →")}
@@ -134,7 +134,7 @@ export async function emailCancellationClient(d: {
   const byPro = d.cancelledBy === "pro";
   await send(
     d.clientEmail,
-    "Réservation annulée — AXE",
+    "Réservation annulée — GetAxe",
     base(`
       <p style="${H}">Réservation annulée</p>
       <p style="${P}">
@@ -161,6 +161,37 @@ export async function emailCancellationClient(d: {
   );
 }
 
+/** Pro + client : facture envoyée */
+export async function emailInvoiceSentClient(d: {
+  clientEmail: string;
+  clientName: string;
+  proName: string;
+  invoiceNumber: string;
+  totalTTC: number;
+  issuedAt: string;
+  dueAt: string;
+}) {
+  const issued = fmtDate(d.issuedAt);
+  const due = fmtDate(d.dueAt);
+  const amount = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(d.totalTTC);
+  await send(
+    d.clientEmail,
+    `Votre facture ${d.invoiceNumber} — GetAxe`,
+    base(`
+      <p style="${H}">Votre facture est disponible</p>
+      <p style="${P}">Bonjour ${d.clientName}, ${d.proName} vous a adressé une facture via GetAxe.</p>
+      ${HR}
+      <p style="${LBL}">Numéro</p><p style="${VAL}">${d.invoiceNumber}</p>
+      <p style="${LBL}">Date d'émission</p><p style="${VAL}">${issued}</p>
+      <p style="${LBL}">Date d'échéance</p><p style="${VAL}">${due}</p>
+      <p style="${LBL}">Montant total</p><p style="${BIG}">${amount}</p>
+      ${HR}
+      <p style="${P}">Connectez-vous à votre espace pour consulter et télécharger le PDF.</p>
+      ${btn(`${APP_URL}/dashboard/client`, "Voir ma facture →")}
+    `)
+  );
+}
+
 /** Pro : annulation par le client */
 export async function emailCancellationPro(d: {
   proEmail: string;
@@ -172,7 +203,7 @@ export async function emailCancellationPro(d: {
   const date = fmtDate(d.sessionDate);
   await send(
     d.proEmail,
-    "Un client a annulé sa réservation — AXE",
+    "Un client a annulé sa réservation — GetAxe",
     base(`
       <p style="${H}">Réservation annulée</p>
       <p style="${P}">
@@ -199,7 +230,7 @@ export async function emailPaymentReleasedPro(d: {
   const date = fmtDate(d.sessionDate);
   await send(
     d.proEmail,
-    "Paiement libéré — AXE",
+    "Paiement libéré — GetAxe",
     base(`
       <p style="${H}">Paiement libéré 💸</p>
       <p style="${P}">
@@ -208,10 +239,34 @@ export async function emailPaymentReleasedPro(d: {
       </p>
       ${HR}
       <p style="${LBL}">Séance</p><p style="${VAL}">${d.sessionType} — ${date}</p>
-      <p style="${LBL}">Montant viré (85 %)</p><p style="${BIG}">${d.proPayoutEuros} €</p>
+      <p style="${LBL}">Montant viré (92 %)</p><p style="${BIG}">${d.proPayoutEuros} €</p>
       ${HR}
       <p style="${P}">Le virement apparaîtra sur votre compte bancaire sous 2 à 5 jours ouvrés.</p>
       ${btn(`${APP_URL}/dashboard`, "Voir mes paiements →")}
+    `)
+  );
+}
+
+/** Admin : nouvelle inscription d'un professionnel */
+export async function emailNewProAdminNotification(d: {
+  proName: string;
+  proEmail: string;
+  profession: string;
+}) {
+  await send(
+    "brice.faradji@gmail.com",
+    `[GetAxe Admin] Nouvelle inscription — ${d.proName}`,
+    base(`
+      <p style="${H}">Nouvelle candidature pro</p>
+      <p style="${P}">
+        Un professionnel vient de s&apos;inscrire sur GetAxe et attend votre validation.
+      </p>
+      ${HR}
+      <p style="${LBL}">Nom</p><p style="${VAL}">${d.proName}</p>
+      <p style="${LBL}">Email</p><p style="${VAL}">${d.proEmail}</p>
+      <p style="${LBL}">Profession</p><p style="${VAL}">${d.profession}</p>
+      ${HR}
+      ${btn(`${APP_URL}/admin`, "Valider le profil →")}
     `)
   );
 }

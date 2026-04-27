@@ -50,7 +50,7 @@ export default function NeedForm() {
         </div>
         <h2 className="text-2xl font-bold text-axe-white">Demande envoyée</h2>
         <p className="text-axe-muted max-w-sm mx-auto">
-          Nous avons bien reçu votre demande. L&apos;équipe AXE vous contacte dans les plus brefs délais pour vous proposer le bon professionnel.
+          Nous avons bien reçu votre demande. L&apos;équipe GetAxe vous contacte dans les plus brefs délais pour vous proposer le bon professionnel.
         </p>
       </div>
     );
@@ -158,7 +158,7 @@ export default function NeedForm() {
           className="mt-1 accent-axe-accent"
         />
         <span className="text-xs text-axe-muted leading-relaxed">
-          Je comprends qu&apos;AXE facilite une mise en relation et ne remplace pas un avis médical d&apos;urgence.
+          Je comprends qu&apos;GetAxe facilite une mise en relation et ne remplace pas un avis médical d&apos;urgence.
           En cas d&apos;urgence, j&apos;appelle le 15 ou le 112.
         </span>
       </label>

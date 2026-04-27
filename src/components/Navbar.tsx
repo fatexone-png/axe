@@ -6,6 +6,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { signOut, isAdmin } from "@/lib/auth";
 import { APP_NAME } from "@/lib/constants";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +43,9 @@ export default function Navbar() {
           <Link href="/" onClick={closeAll} className="text-axe-white font-bold text-xl tracking-tight">
             {APP_NAME}
           </Link>
+
+          {/* Notification bell — visible si connecté */}
+          {user && <NotificationBell userId={user.email!} />}
 
           {/* Burger — toutes tailles d'ecran */}
           <button
@@ -160,6 +164,7 @@ export default function Navbar() {
                       className="text-axe-muted hover:text-axe-white text-sm">
                       Mon espace
                     </Link>
+                    <NotificationBell userId={user.email!} />
                   </div>
                   <button type="button"
                     onClick={() => { signOut(); closeAll(); }}

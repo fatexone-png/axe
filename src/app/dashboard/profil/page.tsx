@@ -119,7 +119,7 @@ export default function DashboardProfilPage() {
           Aucun profil professionnel trouvé
         </p>
         <p className="text-axe-muted text-sm text-center max-w-sm">
-          Votre compte n&apos;est pas associé à un profil professionnel sur AXE.
+          Votre compte n&apos;est pas associé à un profil professionnel sur GetAxe.
         </p>
         <Link href="/dashboard" className="text-axe-accent hover:underline text-sm">
           ← Retour au tableau de bord

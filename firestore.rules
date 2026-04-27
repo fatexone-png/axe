@@ -13,9 +13,9 @@ service cloud.firestore {
         request.auth.token.email == 'brice.faradji@gmail.com';
     }
 
-    // Professionals : création pour utilisateurs connectés, lecture publique des approuvés
+    // Professionals : création publique (inscription sans compte), lecture publique des approuvés
     match /professionals/{profId} {
-      allow create: if request.auth != null;
+      allow create: if true;
       allow read: if true;
       allow update: if request.auth != null && (
         request.auth.token.email == resource.data.email ||
@@ -30,13 +30,18 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow read: if request.auth != null && (
         request.auth.token.email == resource.data.proEmail ||
+        request.auth.token.email == resource.data.clientEmail ||
         request.auth.token.email == 'brice.faradji@gmail.com'
       );
-      allow update, delete: if request.auth != null &&
+      allow update: if request.auth != null && (
+        request.auth.token.email == resource.data.proEmail ||
+        request.auth.token.email == 'brice.faradji@gmail.com'
+      );
+      allow delete: if request.auth != null &&
         request.auth.token.email == 'brice.faradji@gmail.com';
     }
 
-    // Bookings : créés/mis à jour par les routes API (sans auth utilisateur)
+    // Bookings : créés/mis à jour par les routes API serveur (sans auth utilisateur)
     match /bookings/{bookingId} {
       allow create: if true;
       allow read: if request.auth != null && (
@@ -57,5 +62,46 @@ service cloud.firestore {
       allow update, delete: if request.auth != null &&
         request.auth.token.email == 'brice.faradji@gmail.com';
     }
+
+    // Counters : numérotation des factures (lecture/écriture authentifié)
+    match /counters/{counterId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Notifications : chaque utilisateur lit/écrit ses propres notifications
+    match /notifications/{notifId} {
+      allow create: if true;
+      allow read, update: if request.auth != null &&
+        request.auth.token.email == resource.data.userId;
+      allow delete: if request.auth != null && (
+        request.auth.token.email == resource.data.userId ||
+        request.auth.token.email == 'brice.faradji@gmail.com'
+      );
+    }
+
+    // Conversations : participants peuvent lire et mettre à jour
+    match /conversations/{convoId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null && (
+        request.auth.token.email == resource.data.proEmail ||
+        request.auth.token.email == resource.data.clientEmail ||
+        request.auth.token.email == 'brice.faradji@gmail.com'
+      );
+      allow delete: if request.auth != null &&
+        request.auth.token.email == 'brice.faradji@gmail.com';
+
+      // Messages : sous-collection de la conversation
+      match /messages/{messageId} {
+        allow create: if request.auth != null;
+        allow read: if request.auth != null && (
+          request.auth.token.email == get(/databases/$(database)/documents/conversations/$(convoId)).data.proEmail ||
+          request.auth.token.email == get(/databases/$(database)/documents/conversations/$(convoId)).data.clientEmail ||
+          request.auth.token.email == 'brice.faradji@gmail.com'
+        );
+        allow update, delete: if request.auth != null &&
+          request.auth.token.email == 'brice.faradji@gmail.com';
+      }
+    }
+
   }
 }

@@ -1,8 +1,8 @@
 import NeedForm from "@/components/NeedForm";
 
 export const metadata = {
-  title: "Déposer une demande — AXE",
-  description: "Décrivez votre situation et votre objectif. AXE trouve le professionnel adapté.",
+  title: "Déposer une demande — GetAxe",
+  description: "Décrivez votre situation et votre objectif. GetAxe trouve le professionnel adapté.",
 };
 
 export default function DemandePage() {
@@ -17,7 +17,7 @@ export default function DemandePage() {
             Déposez votre demande
           </h1>
           <p className="text-axe-muted text-sm max-w-sm mx-auto">
-            Répondez à quelques questions. L&apos;équipe AXE vous contacte pour vous proposer le bon professionnel.
+            Répondez à quelques questions. L&apos;équipe GetAxe vous contacte pour vous proposer le bon professionnel.
           </p>
         </div>
         <NeedForm />

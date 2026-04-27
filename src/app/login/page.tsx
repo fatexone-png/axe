@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { signIn, signUp, signInWithGoogle } from "@/lib/auth";
+import { signIn, signUp, signInWithGoogle, isAdmin } from "@/lib/auth";
 
 type Mode = "login" | "signup" | "reset";
 
@@ -52,12 +52,13 @@ export default function LoginPage() {
         return;
       }
 
+      let cred;
       if (mode === "login") {
-        await signIn(email, password);
+        cred = await signIn(email, password);
       } else {
-        await signUp(email, password);
+        cred = await signUp(email, password);
       }
-      router.push("/dashboard");
+      router.push(isAdmin(cred.user) ? "/admin" : "/dashboard");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (mode === "reset" && msg.includes("user-not-found")) {
@@ -73,8 +74,8 @@ export default function LoginPage() {
   const handleGoogle = async () => {
     setError("");
     try {
-      await signInWithGoogle();
-      router.push("/dashboard");
+      const gcred = await signInWithGoogle();
+      router.push(isAdmin(gcred.user) ? "/admin" : "/dashboard");
     } catch {
       setError("Connexion Google échouée.");
     }
@@ -82,8 +83,8 @@ export default function LoginPage() {
 
   const title = mode === "login" ? "Connexion" : mode === "signup" ? "Créer un compte" : "Mot de passe oublié";
   const subtitle =
-    mode === "login" ? "Accédez à votre espace AXE." :
-    mode === "signup" ? "Rejoignez AXE en tant que client ou professionnel." :
+    mode === "login" ? "Accédez à votre espace GetAxe." :
+    mode === "signup" ? "Rejoignez GetAxe en tant que client ou professionnel." :
     "Entrez votre email pour recevoir un lien de réinitialisation.";
 
   return (

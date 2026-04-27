@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getProfessionalById } from "@/lib/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { getProfessionalById, getOrCreateConversation } from "@/lib/firestore";
 import { Professional, Profession, DayOfWeek } from "@/lib/types";
 import { PROFESSION_LABELS } from "@/lib/constants";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -13,9 +16,10 @@ interface ProPageProps {
 
 const PROFESSION_COLORS: Record<Profession, string> = {
   coach: "bg-green-500/10 text-green-400",
+  physical_trainer: "bg-orange-500/10 text-orange-400",
+  mental_coach: "bg-violet-500/10 text-violet-400",
   kine: "bg-blue-500/10 text-blue-400",
   osteo: "bg-purple-500/10 text-purple-400",
-  physical_trainer: "bg-orange-500/10 text-orange-400",
   sports_doctor: "bg-red-500/10 text-red-400",
   recovery: "bg-teal-500/10 text-teal-400",
 };
@@ -41,9 +45,17 @@ const DAY_ORDER: DayOfWeek[] = [
 ];
 
 export default function ProPublicPage({ params }: ProPageProps) {
+  const router = useRouter();
   const [pro, setPro] = useState<Professional | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (!auth) return;
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return unsub;
+  }, []);
 
   useEffect(() => {
     async function fetchPro() {
@@ -62,6 +74,24 @@ export default function ProPublicPage({ params }: ProPageProps) {
     }
     fetchPro();
   }, [params.id]);
+
+  async function handleContactPro() {
+    if (!auth) return;
+    if (!user) {
+      router.push(`/login?redirect=/pro/${params.id}`);
+      return;
+    }
+    if (!pro?.id) return;
+    const proName = `${pro.firstName} ${pro.lastName}`;
+    await getOrCreateConversation(
+      pro.id,
+      pro.email,
+      proName,
+      user.email!,
+      user.displayName ?? user.email!
+    );
+    router.push("/dashboard/client?tab=messages");
+  }
 
   if (loading) {
     return (
@@ -157,6 +187,33 @@ export default function ProPublicPage({ params }: ProPageProps) {
           </div>
         )}
 
+        {/* Liens sociaux */}
+        {(pro.website || pro.instagram || pro.linkedin) && (
+          <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">Liens</h2>
+            <div className="flex flex-wrap gap-3">
+              {pro.website && (
+                <a href={pro.website} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 bg-axe-dark rounded-xl text-axe-muted hover:text-axe-white text-sm transition-colors border border-white/5">
+                  🌐 Site web
+                </a>
+              )}
+              {pro.instagram && (
+                <a href={`https://instagram.com/${pro.instagram.replace("@","")}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 bg-axe-dark rounded-xl text-axe-muted hover:text-axe-white text-sm transition-colors border border-white/5">
+                  📸 Instagram
+                </a>
+              )}
+              {pro.linkedin && (
+                <a href={pro.linkedin} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 bg-axe-dark rounded-xl text-axe-muted hover:text-axe-white text-sm transition-colors border border-white/5">
+                  💼 LinkedIn
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Spécialités */}
         {pro.specialties.length > 0 && (
           <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
@@ -228,6 +285,31 @@ export default function ProPublicPage({ params }: ProPageProps) {
           </div>
         )}
 
+        {/* Disponibilités */}
+        {pro.availabilityPeriods && pro.availabilityPeriods.length > 0 && (
+          <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">Disponibilités</h2>
+            <div className="space-y-3">
+              {pro.availabilityPeriods.map((period) => (
+                <div key={period.id} className="bg-axe-dark rounded-xl p-3 space-y-1.5">
+                  {period.label && <p className="text-axe-white text-sm font-semibold">{period.label}</p>}
+                  <p className="text-axe-muted text-xs">
+                    {period.startDate} → {period.endDate} · {period.startTime}–{period.endTime}
+                  </p>
+                  <p className="text-axe-muted text-xs">{period.location}</p>
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {period.days.map((d) => (
+                      <span key={d} className="px-2 py-0.5 bg-axe-accent/10 text-axe-accent text-xs rounded-md font-medium">
+                        {DAY_LABELS[d]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Zones d'intervention */}
         <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
           <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">
@@ -268,6 +350,27 @@ export default function ProPublicPage({ params }: ProPageProps) {
           </div>
         </div>
 
+        {/* Politique d'annulation */}
+        {pro.cancellationPolicy && pro.cancellationPolicy.rules.length > 0 && (
+          <div className="bg-axe-charcoal border border-white/5 rounded-2xl p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-axe-muted uppercase tracking-wider">Politique d&apos;annulation</h2>
+            <div className="space-y-2">
+              {pro.cancellationPolicy.rules.map((rule, i) => (
+                <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
+                  <span className="text-axe-muted">
+                    {rule.hoursBeforeSession >= 24
+                      ? `Plus de ${rule.hoursBeforeSession}h avant`
+                      : `Moins de ${rule.hoursBeforeSession}h avant`}
+                  </span>
+                  <span className={`font-semibold ${rule.refundPercent === 100 ? "text-green-400" : rule.refundPercent === 0 ? "text-red-400" : "text-axe-amber"}`}>
+                    {rule.refundPercent}% remboursé
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* CTA principal */}
         <div className="flex flex-col gap-3">
           <Link
@@ -276,6 +379,12 @@ export default function ProPublicPage({ params }: ProPageProps) {
           >
             Réserver une séance →
           </Link>
+          <button
+            onClick={handleContactPro}
+            className="inline-block w-full bg-axe-charcoal text-axe-white font-semibold text-base rounded-2xl px-8 py-4 hover:bg-axe-grey transition-colors border border-white/10 text-center"
+          >
+            Envoyer un message →
+          </button>
           <Link
             href="/demande"
             className="inline-block w-full bg-axe-charcoal text-axe-white font-semibold text-base rounded-2xl px-8 py-4 hover:bg-axe-grey transition-colors border border-white/10 text-center"

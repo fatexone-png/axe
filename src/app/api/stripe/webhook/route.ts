@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { getBookingById, updateBookingStatus } from "@/lib/firestore";
+import { getBookingById, updateBookingStatus, createNotification } from "@/lib/firestore";
 import { updateDoc, doc, getFirestore } from "firebase/firestore";
 import Stripe from "stripe";
 import { emailBookingConfirmedClient, emailBookingConfirmedPro } from "@/lib/email";
@@ -31,6 +31,11 @@ export async function POST(request: NextRequest): Promise<Response> {
       const bookingId = session.metadata?.bookingId;
 
       if (bookingId) {
+        const existing = await getBookingById(bookingId);
+
+        // Idempotence — ne pas retraiter un webhook déjà appliqué
+        if (existing && existing.status !== "pending_payment") break;
+
         await updateBookingStatus(bookingId, "paid", {
           stripeSessionId: session.id,
           stripePaymentIntentId:
@@ -56,6 +61,14 @@ export async function POST(request: NextRequest): Promise<Response> {
           await Promise.all([
             emailBookingConfirmedClient(emailData),
             emailBookingConfirmedPro(emailData),
+            createNotification({
+              userId: booking.proEmail,
+              type: "new_booking",
+              title: "Nouvelle réservation",
+              body: `${booking.clientName} a réservé "${booking.sessionType}" le ${booking.sessionDate}${booking.slotTime ? " à " + booking.slotTime : ""}.`,
+              read: false,
+              link: `/dashboard`,
+            }),
           ]);
         }
       }

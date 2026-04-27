@@ -12,7 +12,7 @@ export default function AdminProfessionals() {
   const [loading, setLoading] = useState(true);
   const [filterProfession, setFilterProfession] = useState("");
   const [filterCity, setFilterCity] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState("pending");
 
   useEffect(() => {
     getProfessionals().then((data) => {
@@ -37,10 +37,33 @@ export default function AdminProfessionals() {
     return true;
   });
 
+  const pendingCount = pros.filter((p) => p.status === "pending").length;
+
   if (loading) return <p className="text-axe-muted text-sm">Chargement des professionnels…</p>;
 
   return (
     <div className="space-y-6">
+      {/* Bandeau inscriptions en attente */}
+      {pendingCount > 0 && (
+        <div
+          className="flex items-center justify-between bg-axe-amber/10 border border-axe-amber/30 rounded-xl px-5 py-3 cursor-pointer"
+          onClick={() => setFilterStatus("pending")}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-axe-amber font-bold text-lg">⚠</span>
+            <div>
+              <p className="text-sm font-semibold text-axe-amber">
+                {pendingCount} candidature{pendingCount > 1 ? "s" : ""} en attente de validation
+              </p>
+              <p className="text-xs text-axe-amber/70">Cliquez pour filtrer</p>
+            </div>
+          </div>
+          <span className="bg-axe-amber text-axe-black text-xs font-bold px-2.5 py-1 rounded-full">
+            {pendingCount}
+          </span>
+        </div>
+      )}
+
       {/* Filtres */}
       <div className="flex flex-wrap gap-3">
         <select

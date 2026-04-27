@@ -651,7 +651,7 @@ export default function OrientationQuiz() {
               Des questions sur votre parcours ?
             </p>
             <p className="text-axe-muted text-sm">
-              Le Guide IA AXE répond à vos questions sur les formations, diplômes et débouchés.
+              Le Guide IA GetAxe répond à vos questions sur les formations, diplômes et débouchés.
             </p>
           </div>
           <Link

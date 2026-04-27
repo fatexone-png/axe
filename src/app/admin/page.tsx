@@ -8,6 +8,7 @@ import { isAdmin } from "@/lib/auth";
 import AdminRequests from "@/components/AdminRequests";
 import AdminProfessionals from "@/components/AdminProfessionals";
 import { seedProfessionals } from "@/lib/seedProfessionals";
+import { getProfessionals } from "@/lib/firestore";
 
 type Tab = "requests" | "professionals";
 
@@ -18,6 +19,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("requests");
   const [seeding, setSeeding] = useState(false);
   const [seedMsg, setSeedMsg] = useState("");
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
@@ -27,6 +29,9 @@ export default function AdminPage() {
       }
       setUser(u);
       setLoading(false);
+      getProfessionals().then((list) =>
+        setPendingCount(list.filter((p) => p.status === "pending").length)
+      );
     });
   }, [router]);
 
@@ -83,6 +88,11 @@ export default function AdminPage() {
           </TabButton>
           <TabButton active={tab === "professionals"} onClick={() => setTab("professionals")}>
             Professionnels
+            {pendingCount > 0 && (
+              <span className="ml-2 bg-axe-amber text-axe-black text-xs font-bold px-1.5 py-0.5 rounded-full">
+                {pendingCount}
+              </span>
+            )}
           </TabButton>
         </div>
 

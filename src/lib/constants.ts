@@ -4,7 +4,7 @@ export const ADMIN_EMAILS: string[] = [
   // ajouter d'autres admins ici
 ];
 
-export const APP_NAME = "AXE";
+export const APP_NAME = "GetAxe";
 export const APP_TAGLINE = "La référence des professionnels\ndu sport et de la santé.";
 
 // ──────────────────────────────────────────────
@@ -48,12 +48,13 @@ export const TRUST_LEVEL_LABELS: Record<string, string> = {
   unverified: "Non vérifié",
   verified: "Vérifié",
   certified: "Certifié",
-  elite: "Elite AXE",
+  elite: "Elite GetAxe",
 };
 
 export const PROFESSION_LABELS: Record<string, string> = {
   coach: "Coach sportif",
   physical_trainer: "Préparateur physique",
+  mental_coach: "Préparateur mental",
   kine: "Kinésithérapeute",
   osteo: "Ostéopathe",
   sports_doctor: "Médecin du sport",

@@ -4,7 +4,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: "2026-04-22.dahlia",
 });
 
-export const PLATFORM_FEE_PERCENT = 15;
+export const PLATFORM_FEE_PERCENT = 8;
 
 export function computeFee(amountCents: number): {
   proAmount: number;

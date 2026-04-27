@@ -40,7 +40,7 @@ export default function InvoiceGenerator({ request, pro, onClose }: Props) {
     }
     setError("");
     setInvoice({
-      invoiceNumber: "AXE-XXXX",
+      invoiceNumber: "GETAXE-XXXX",
       requestId: request.id!,
       professionalId: pro.id!,
       proFirstName: pro.firstName,
@@ -56,6 +56,14 @@ export default function InvoiceGenerator({ request, pro, onClose }: Props) {
       clientLastName: request.lastName,
       clientEmail: request.email,
       clientCity: request.city,
+      lines: [{
+        id: "1",
+        type: "Prestation",
+        description,
+        quantity,
+        unitPrice,
+        totalLine: totalHT,
+      }],
       description,
       quantity,
       unitPrice,
@@ -211,13 +219,13 @@ export default function InvoiceGenerator({ request, pro, onClose }: Props) {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || invoice.invoiceNumber !== "AXE-XXXX"}
+                disabled={saving || invoice.invoiceNumber !== "GETAXE-XXXX"}
                 className="flex-1 btn-primary text-sm py-3 disabled:opacity-50"
               >
-                {saving ? "Enregistrement…" : invoice.invoiceNumber !== "AXE-XXXX" ? "✓ Facture enregistrée" : "Enregistrer la facture"}
+                {saving ? "Enregistrement…" : invoice.invoiceNumber !== "GETAXE-XXXX" ? "✓ Facture enregistrée" : "Enregistrer la facture"}
               </button>
             </div>
-            {invoice.invoiceNumber !== "AXE-XXXX" && (
+            {invoice.invoiceNumber !== "GETAXE-XXXX" && (
               <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 text-center">
                 <p className="text-green-400 text-sm font-medium">
                   Facture {invoice.invoiceNumber} enregistrée

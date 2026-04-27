@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, User, deleteUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getBookingsByClient } from "@/lib/firestore";
 import { Booking, BookingStatus } from "@/lib/types";
 import Link from "next/link";
+import MessagingPanel from "@/components/MessagingPanel";
 
 // ─── Labels & couleurs ────────────────────────────────────────────────────────
 
@@ -49,6 +50,9 @@ export default function ClientDashboardPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelResults, setCancelResults] = useState<Record<string, { refundEuros: number; promoCode?: string }>>({});
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
   useEffect(() => {
     return onAuthStateChanged(auth, async (u) => {
       if (!u) { router.push("/login"); return; }
@@ -71,7 +75,7 @@ export default function ClientDashboardPage() {
       const res = await fetch("/api/stripe/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId }),
+        body: JSON.stringify({ bookingId, clientEmail: user?.email }),
       });
       if (!res.ok) {
         const d = await res.json() as { error?: string };
@@ -93,7 +97,7 @@ export default function ClientDashboardPage() {
       const res = await fetch("/api/stripe/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId, cancelledBy: "client" }),
+        body: JSON.stringify({ bookingId, cancelledBy: "client", callerEmail: user?.email }),
       });
       const d = await res.json() as { refundAmountEuros?: number; promoCode?: string; error?: string };
       if (!res.ok) { alert(d.error ?? "Erreur lors de l'annulation."); return; }
@@ -102,6 +106,26 @@ export default function ClientDashboardPage() {
       setCancelPanelId(null);
     } finally {
       setCancellingId(null);
+    }
+  }
+
+  // ── Supprimer le compte ────────────────────────────────────────────────────
+
+  async function handleDeleteAccount() {
+    if (!user) return;
+    setDeletingAccount(true);
+    try {
+      await deleteUser(user);
+      router.push("/");
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("requires-recent-login")) {
+        alert("Pour supprimer votre compte, veuillez vous reconnecter puis réessayer.");
+        router.push("/login");
+      } else {
+        alert("Erreur lors de la suppression du compte. Contactez contact@getaxe.fr");
+      }
+    } finally {
+      setDeletingAccount(false);
     }
   }
 
@@ -287,6 +311,49 @@ export default function ClientDashboardPage() {
             </div>
           </div>
         )}
+
+        {/* ── Messages ── */}
+        {user && (
+          <div>
+            <h2 className="text-sm font-semibold text-axe-muted uppercase tracking-wider mb-4">Messages</h2>
+            <MessagingPanel userEmail={user.email!} role="client" userName={user.displayName ?? user.email!} />
+          </div>
+        )}
+
+        {/* ── RGPD : suppression du compte ── */}
+        <div className="mt-16 pt-8 border-t border-white/5">
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-xs text-red-500/60 hover:text-red-400 transition-colors"
+            >
+              Supprimer mon compte (RGPD)
+            </button>
+          ) : (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 space-y-4">
+              <p className="text-red-400 font-semibold text-sm">Supprimer définitivement mon compte</p>
+              <p className="text-axe-muted text-xs leading-relaxed">
+                Cette action est irréversible. Votre compte Firebase sera supprimé immédiatement.
+                Vos données personnelles seront effacées dans un délai de 30 jours conformément au RGPD.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 bg-axe-charcoal border border-white/10 text-axe-muted text-sm py-2.5 rounded-xl hover:text-axe-white transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                  className="flex-1 bg-red-500/20 border border-red-500/30 text-red-400 text-sm py-2.5 rounded-xl hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                >
+                  {deletingAccount ? "Suppression…" : "Confirmer la suppression"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

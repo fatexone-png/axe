@@ -1,6 +1,7 @@
 export const PROFESSIONS = [
   { value: "coach", label: "Coach sportif" },
   { value: "physical_trainer", label: "Préparateur physique" },
+  { value: "mental_coach", label: "Préparateur mental" },
   { value: "kine", label: "Kinésithérapeute" },
   { value: "osteo", label: "Ostéopathe" },
   { value: "sports_doctor", label: "Médecin du sport" },

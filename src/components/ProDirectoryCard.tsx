@@ -6,6 +6,7 @@ import { PROFESSION_LABELS } from "@/lib/constants";
 
 interface ProDirectoryCardProps {
   pro: Professional;
+  distanceKm?: number;
 }
 
 // ── Couleurs par profession ─────────────────────────────────────────────────
@@ -13,6 +14,7 @@ interface ProDirectoryCardProps {
 const PROFESSION_COLORS: Record<Profession, string> = {
   coach: "bg-green-500/15 text-green-400 border border-green-500/20",
   physical_trainer: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+  mental_coach: "bg-violet-500/15 text-violet-400 border border-violet-500/20",
   kine: "bg-blue-500/15 text-blue-400 border border-blue-500/20",
   osteo: "bg-purple-500/15 text-purple-400 border border-purple-500/20",
   sports_doctor: "bg-cyan-500/15 text-cyan-400 border border-cyan-500/20",
@@ -44,7 +46,7 @@ const TRUST_BADGES: Record<TrustLevel, TrustBadgeConfig> = {
     className: "bg-purple-500/15 text-purple-400 border border-purple-500/20",
   },
   elite: {
-    label: "Elite AXE",
+    label: "Elite GetAxe",
     icon: "👑",
     className: "bg-axe-amber/15 text-axe-amber border border-axe-amber/20",
   },
@@ -52,7 +54,7 @@ const TRUST_BADGES: Record<TrustLevel, TrustBadgeConfig> = {
 
 // ── Composant ───────────────────────────────────────────────────────────────
 
-export default function ProDirectoryCard({ pro }: ProDirectoryCardProps) {
+export default function ProDirectoryCard({ pro, distanceKm }: ProDirectoryCardProps) {
   const professionColor =
     PROFESSION_COLORS[pro.profession] ??
     "bg-axe-grey/30 text-axe-muted border border-white/5";
@@ -132,6 +134,14 @@ export default function ProDirectoryCard({ pro }: ProDirectoryCardProps) {
           </span>
         )}
       </div>
+
+      {/* Distance */}
+      {distanceKm !== undefined && (
+        <div className="text-xs text-axe-muted flex items-center gap-1">
+          <span>📍</span>
+          <span>~{Math.round(distanceKm)} km</span>
+        </div>
+      )}
 
       {/* Infos RC Pro + Expérience */}
       <div className="flex items-center justify-between text-xs text-axe-muted">

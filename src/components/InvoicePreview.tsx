@@ -3,122 +3,221 @@ import { Invoice } from "@/lib/types";
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(n);
 
-const formatDateFR = (iso: string) =>
-  new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(iso));
+const formatDateFR = (iso: string) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(d);
+};
 
 export default function InvoicePreview({ invoice }: { invoice: Invoice }) {
+  const vatExempt = invoice.proVatExempt;
+  const paymentDays = Math.max(
+    1,
+    Math.round((new Date(invoice.dueAt).getTime() - new Date(invoice.issuedAt).getTime()) / 86400000)
+  );
+  const isB2B = invoice.invoiceType === "B2B";
+
   return (
-    <div className="bg-white text-gray-900 rounded-xl p-8 text-sm font-sans space-y-6">
-      {/* En-tête */}
-      <div className="flex items-start justify-between">
+    <div style={{
+      background: "#fff",
+      color: "#111",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+      fontSize: "13px",
+      lineHeight: "1.5",
+      padding: "48px",
+      maxWidth: "720px",
+      margin: "0 auto",
+      boxSizing: "border-box",
+    }}>
+
+      {/* ── En-tête ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "36px" }}>
         <div>
-          <p className="text-2xl font-bold text-gray-900 tracking-tight">FACTURE</p>
-          <p className="text-gray-500 text-xs mt-1">{invoice.invoiceNumber}</p>
+          <div style={{ fontSize: "28px", fontWeight: 800, letterSpacing: "-0.5px", color: "#111" }}>FACTURE</div>
+          <div style={{ fontSize: "13px", color: "#888", marginTop: "4px" }}>N° {invoice.invoiceNumber}</div>
         </div>
-        <div className="text-right">
-          <p className="font-bold text-gray-900 text-lg">AXE</p>
-          <p className="text-gray-500 text-xs">Plateforme de mise en relation</p>
-          <p className="text-gray-500 text-xs">contact@axe.fr</p>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontWeight: 700, fontSize: "15px", color: "#111" }}>{invoice.proFirstName} {invoice.proLastName}</div>
+          {invoice.proLegalStatus && <div style={{ color: "#888", fontSize: "12px" }}>{invoice.proLegalStatus}</div>}
+          {invoice.proCity && <div style={{ color: "#888", fontSize: "12px" }}>{invoice.proCity}</div>}
         </div>
       </div>
 
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4 text-xs">
-        <div>
-          <p className="text-gray-400 uppercase tracking-wider mb-1">Date d&apos;émission</p>
-          <p className="font-medium text-gray-800">{formatDateFR(invoice.issuedAt)}</p>
+      {/* ── Dates ── */}
+      <div style={{ display: "flex", gap: "24px", background: "#f7f7f7", borderRadius: "8px", padding: "14px 20px", marginBottom: "28px" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Date d&apos;émission</div>
+          <div style={{ fontWeight: 600, color: "#111" }}>{formatDateFR(invoice.issuedAt)}</div>
         </div>
-        <div>
-          <p className="text-gray-400 uppercase tracking-wider mb-1">Date d&apos;échéance</p>
-          <p className="font-medium text-gray-800">{formatDateFR(invoice.dueAt)}</p>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Date d&apos;échéance</div>
+          <div style={{ fontWeight: 600, color: "#111" }}>{formatDateFR(invoice.dueAt)}</div>
         </div>
       </div>
 
-      {/* Émetteur / Destinataire */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* ── Émetteur / Destinataire ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", marginBottom: "32px" }}>
         <div>
-          <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Émetteur</p>
-          <p className="font-bold text-gray-900">{invoice.proFirstName} {invoice.proLastName}</p>
-          {invoice.proLegalStatus && <p className="text-gray-600 text-xs">{invoice.proLegalStatus}</p>}
-          <p className="text-gray-600 text-xs">{invoice.proEmail}</p>
-          <p className="text-gray-600 text-xs">{invoice.proPhone}</p>
-          <p className="text-gray-600 text-xs">{invoice.proCity}</p>
-          {invoice.proSiret && (
-            <p className="text-gray-600 text-xs mt-1">SIRET : {invoice.proSiret}</p>
+          <div style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Émetteur</div>
+          <div style={{ fontWeight: 700, color: "#111", marginBottom: "3px" }}>{invoice.proFirstName} {invoice.proLastName}</div>
+          {invoice.proLegalStatus && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.proLegalStatus}</div>}
+          {invoice.proEmail && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.proEmail}</div>}
+          {invoice.proPhone && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.proPhone}</div>}
+          {invoice.proAddress && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.proAddress}</div>}
+          {invoice.proCity && !invoice.proAddress && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.proCity}</div>}
+          {invoice.proSiret
+            ? <div style={{ color: "#666", fontSize: "12px", marginTop: "4px" }}>SIRET : {invoice.proSiret}</div>
+            : <div style={{ color: "#e05", fontSize: "12px", marginTop: "4px" }}>SIRET manquant</div>
+          }
+          {!vatExempt && invoice.proVatNumber && (
+            <div style={{ color: "#666", fontSize: "12px" }}>N° TVA : {invoice.proVatNumber}</div>
           )}
-          {invoice.proVatNumber && (
-            <p className="text-gray-600 text-xs">TVA : {invoice.proVatNumber}</p>
-          )}
         </div>
         <div>
-          <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Destinataire</p>
-          <p className="font-bold text-gray-900">{invoice.clientFirstName} {invoice.clientLastName}</p>
-          <p className="text-gray-600 text-xs">{invoice.clientEmail}</p>
-          <p className="text-gray-600 text-xs">{invoice.clientCity}</p>
+          <div style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Destinataire</div>
+          {isB2B && invoice.clientCompanyName ? (
+            <>
+              <div style={{ fontWeight: 700, color: "#111", marginBottom: "3px" }}>{invoice.clientCompanyName}</div>
+              {invoice.clientSiret && <div style={{ color: "#666", fontSize: "12px" }}>SIRET : {invoice.clientSiret}</div>}
+              {invoice.clientVatNumber && <div style={{ color: "#666", fontSize: "12px" }}>N° TVA : {invoice.clientVatNumber}</div>}
+              {(invoice.clientFirstName || invoice.clientLastName) && (
+                <div style={{ color: "#666", fontSize: "12px", marginTop: "4px" }}>
+                  Contact : {invoice.clientFirstName} {invoice.clientLastName}
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontWeight: 700, color: "#111", marginBottom: "3px" }}>
+              {invoice.clientFirstName} {invoice.clientLastName}
+            </div>
+          )}
+          {invoice.clientEmail && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.clientEmail}</div>}
+          {invoice.clientAddress && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.clientAddress}</div>}
+          {invoice.clientCity && !invoice.clientAddress && <div style={{ color: "#666", fontSize: "12px" }}>{invoice.clientCity}</div>}
         </div>
       </div>
 
-      {/* Tableau prestation */}
-      <div>
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-2 text-gray-400 uppercase tracking-wider font-medium">Description</th>
-              <th className="text-center py-2 text-gray-400 uppercase tracking-wider font-medium">Qté</th>
-              <th className="text-right py-2 text-gray-400 uppercase tracking-wider font-medium">PU HT</th>
-              <th className="text-right py-2 text-gray-400 uppercase tracking-wider font-medium">Total HT</th>
+      {/* ── Tableau prestation ── */}
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px" }}>
+        <thead>
+          <tr style={{ background: "#111" }}>
+            <th style={{ textAlign: "left", padding: "10px 14px", color: "#fff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em" }}>Description</th>
+            <th style={{ textAlign: "center", padding: "10px 14px", color: "#fff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>Qté</th>
+            <th style={{ textAlign: "right", padding: "10px 14px", color: "#fff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+              {vatExempt ? "Prix unitaire" : "PU HT"}
+            </th>
+            <th style={{ textAlign: "right", padding: "10px 14px", color: "#fff", fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+              {vatExempt ? "Montant" : "Total HT"}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoice.lines && invoice.lines.length > 0 ? (
+            invoice.lines.map((line, i) => (
+              <tr key={line.id ?? i} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={{ padding: "14px", color: "#222", verticalAlign: "top" }}>
+                  <div style={{ fontWeight: 500 }}>{line.type}</div>
+                  {line.description && line.description !== line.type && (
+                    <div style={{ color: "#666", fontSize: "12px", marginTop: "2px" }}>{line.description}</div>
+                  )}
+                  {line.date && (
+                    <div style={{ color: "#999", fontSize: "11px", marginTop: "2px" }}>
+                      {formatDateFR(line.date)}
+                    </div>
+                  )}
+                  {line.participants != null && (
+                    <div style={{ color: "#999", fontSize: "11px", marginTop: "2px" }}>
+                      {line.participants} participant{line.participants > 1 ? "s" : ""}
+                    </div>
+                  )}
+                </td>
+                <td style={{ padding: "14px", textAlign: "center", color: "#555", verticalAlign: "top" }}>{line.quantity}</td>
+                <td style={{ padding: "14px", textAlign: "right", color: "#555", whiteSpace: "nowrap", verticalAlign: "top" }}>{formatCurrency(line.unitPrice)}</td>
+                <td style={{ padding: "14px", textAlign: "right", fontWeight: 600, color: "#111", whiteSpace: "nowrap", verticalAlign: "top" }}>{formatCurrency(line.totalLine)}</td>
+              </tr>
+            ))
+          ) : (
+            <tr style={{ borderBottom: "1px solid #eee" }}>
+              <td style={{ padding: "14px", color: "#222", verticalAlign: "top" }}>{invoice.description}</td>
+              <td style={{ padding: "14px", textAlign: "center", color: "#555" }}>{invoice.quantity}</td>
+              <td style={{ padding: "14px", textAlign: "right", color: "#555", whiteSpace: "nowrap" }}>{formatCurrency(invoice.unitPrice)}</td>
+              <td style={{ padding: "14px", textAlign: "right", fontWeight: 600, color: "#111", whiteSpace: "nowrap" }}>{formatCurrency(invoice.totalHT)}</td>
             </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-gray-100">
-              <td className="py-3 text-gray-800 pr-4">{invoice.description}</td>
-              <td className="py-3 text-center text-gray-600">{invoice.quantity}</td>
-              <td className="py-3 text-right text-gray-600">{formatCurrency(invoice.unitPrice)}</td>
-              <td className="py-3 text-right text-gray-800 font-medium">{formatCurrency(invoice.totalHT)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          )}
+        </tbody>
+      </table>
 
-      {/* Totaux */}
-      <div className="flex justify-end">
-        <div className="w-56 space-y-1.5">
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Total HT</span>
-            <span>{formatCurrency(invoice.totalHT)}</span>
-          </div>
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>TVA ({invoice.vatRate}%)</span>
-            <span>{formatCurrency(invoice.vatAmount)}</span>
-          </div>
-          <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-200 text-sm">
-            <span>Total TTC</span>
-            <span>{formatCurrency(invoice.totalTTC)}</span>
-          </div>
+      {/* ── Totaux ── */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
+        <div style={{ width: "260px" }}>
+          {vatExempt ? (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: "2px solid #111", fontWeight: 700, fontSize: "15px" }}>
+              <span>Total</span>
+              <span>{formatCurrency(invoice.totalHT)}</span>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", color: "#888", fontSize: "12px" }}>
+                <span>Total HT</span><span>{formatCurrency(invoice.totalHT)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", color: "#888", fontSize: "12px" }}>
+                <span>TVA ({invoice.vatRate}%)</span><span>{formatCurrency(invoice.vatAmount)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderTop: "2px solid #111", fontWeight: 700, fontSize: "15px" }}>
+                <span>Total TTC</span><span>{formatCurrency(invoice.totalTTC)}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Mentions légales */}
-      <div className="border-t border-gray-100 pt-4 space-y-1">
-        {invoice.proVatExempt && (
-          <p className="text-xs text-gray-400">TVA non applicable, art. 293 B du CGI.</p>
+      {/* ── Coordonnées bancaires ── */}
+      {(invoice.iban || invoice.bic) && (
+        <div style={{ background: "#f7f7f7", borderRadius: "8px", padding: "14px 20px", marginBottom: "28px" }}>
+          <div style={{ fontSize: "10px", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+            Coordonnées bancaires — Règlement par virement
+          </div>
+          <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+            {invoice.iban && (
+              <div>
+                <div style={{ fontSize: "10px", color: "#aaa", marginBottom: "2px" }}>IBAN</div>
+                <div style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 600, color: "#111", letterSpacing: "0.03em" }}>
+                  {invoice.iban}
+                </div>
+              </div>
+            )}
+            {invoice.bic && (
+              <div>
+                <div style={{ fontSize: "10px", color: "#aaa", marginBottom: "2px" }}>BIC / SWIFT</div>
+                <div style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 600, color: "#111", letterSpacing: "0.03em" }}>
+                  {invoice.bic}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Mentions légales ── */}
+      <div style={{ borderTop: "1px solid #eee", paddingTop: "20px", fontSize: "11px", color: "#999", lineHeight: "1.7" }}>
+        {vatExempt && (
+          <div style={{ color: "#555", fontWeight: 600, marginBottom: "6px" }}>
+            TVA non applicable, art. 293 B du CGI.
+          </div>
         )}
-        <p className="text-xs text-gray-400">
-          En cas de retard de paiement, des pénalités de 3 fois le taux légal seront appliquées,
-          ainsi qu&apos;une indemnité forfaitaire de recouvrement de 40 €.
-        </p>
-        <p className="text-xs text-gray-400">
-          Règlement par virement bancaire sous {Math.round((new Date(invoice.dueAt).getTime() - new Date(invoice.issuedAt).getTime()) / (1000 * 60 * 60 * 24))} jours.
-        </p>
-      </div>
-
-      {/* Badge V2 Pennylane */}
-      <div className="border border-dashed border-gray-200 rounded-lg p-3 text-center">
-        <p className="text-xs text-gray-400">
-          V2 — Cette facture sera transmise automatiquement via{" "}
-          <span className="font-semibold text-gray-600">Pennylane</span> (PDP agréée DGFiP)
-          pour conformité à la facturation électronique obligatoire.
-        </p>
+        {invoice.showLatePaymentClause !== false && (
+          <div>
+            En cas de retard de paiement, des pénalités de 3 fois le taux d&apos;intérêt légal seront exigibles,
+            ainsi qu&apos;une indemnité forfaitaire de recouvrement de 40 €.
+          </div>
+        )}
+        <div style={{ marginTop: invoice.showLatePaymentClause !== false ? "4px" : "0" }}>
+          Règlement {invoice.iban ? "par virement bancaire " : ""}sous {paymentDays} jour{paymentDays > 1 ? "s" : ""} à compter de la date d&apos;émission.
+        </div>
+        <div style={{ marginTop: "12px", color: "#ccc", fontSize: "10px" }}>
+          Facture émise via GetAxe · getaxe.fr — Dématérialisation obligatoire 2027 (TPE/auto-entrepreneurs) · Intégration Pennylane à venir.
+        </div>
       </div>
     </div>
   );

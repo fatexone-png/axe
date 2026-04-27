@@ -72,7 +72,7 @@ const CATEGORIES: Category[] = [
 ];
 
 const WELCOME_MESSAGE =
-  "Bonjour ! Je suis AXE Guide, votre assistant pour toutes vos questions d'indépendant du sport et de la santé. Choisissez une question dans le menu ou posez-moi directement votre question.";
+  "Bonjour ! Je suis GetAxe Guide, votre assistant pour toutes vos questions d'indépendant du sport et de la santé. Choisissez une question dans le menu ou posez-moi directement votre question.";
 
 // ---------------------------------------------------------------------------
 // Sous-composants
